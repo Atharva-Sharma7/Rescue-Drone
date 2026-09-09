@@ -84,6 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   renderVictimCards();
+  selectVictim(currentVictimId);
 
   // Filter Buttons
   document.querySelectorAll(".filter-btn").forEach(btn => {
@@ -95,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 4. Handle Victim Selection
+  // 4. Handle Victim Selection & Update Explainable Triage Card
   function selectVictim(victimId) {
     currentVictimId = victimId;
     dropdown.value = victimId;
@@ -103,6 +104,32 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".victim-card").forEach(c => c.classList.remove("selected"));
     const activeCard = document.getElementById(`v-card-${victimId}`);
     if (activeCard) activeCard.classList.add("selected");
+
+    const targetVictim = window.RESCUE_CONFIG.victims.find(v => v.id === victimId);
+    if (targetVictim) {
+      const evalData = window.victimEngine.evaluateVictim(targetVictim);
+
+      // Update Triage Score Header
+      const scoreElem = document.getElementById("triage-composite-score");
+      const tierColor = evalData.priorityTier === "CRITICAL" ? "#ef4444" : (evalData.priorityTier === "HIGH" ? "#f59e0b" : "#10b981");
+      scoreElem.innerHTML = `${evalData.compositeScore} <span style="font-size:11px; color:${tierColor};">[${evalData.priorityTier}]</span>`;
+
+      document.getElementById("triage-depth").textContent = `${targetVictim.depthMeters}m`;
+      document.getElementById("triage-confidence").textContent = `${evalData.breakdown.confidence}%`;
+
+      // Update Explainable Breakdown Progress Bars
+      document.getElementById("score-urgency-val").textContent = `40% (Score: ${evalData.breakdown.urgency})`;
+      document.getElementById("score-urgency-bar").style.width = `${evalData.breakdown.urgency}%`;
+
+      document.getElementById("score-access-val").textContent = `25% (Score: ${evalData.breakdown.accessibility})`;
+      document.getElementById("score-access-bar").style.width = `${evalData.breakdown.accessibility}%`;
+
+      document.getElementById("score-conf-val").textContent = `25% (Score: ${evalData.breakdown.confidence})`;
+      document.getElementById("score-conf-bar").style.width = `${evalData.breakdown.confidence}%`;
+
+      document.getElementById("score-hazard-val").textContent = `10% (Mitigation: ${100 - evalData.breakdown.hazardPenalty})`;
+      document.getElementById("score-hazard-bar").style.width = `${100 - evalData.breakdown.hazardPenalty}%`;
+    }
 
     scene3D.focusVictim(victimId);
     updateRouteCalculations();
@@ -114,6 +141,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
   dropdown.addEventListener("change", (e) => {
     selectVictim(e.target.value);
+  });
+
+  // Wire Left-Side Map Data Layer Checkboxes
+  const layerBindings = [
+    { id: "layer-terrain", name: "terrain" },
+    { id: "layer-buildings", name: "buildings" },
+    { id: "layer-rubble", name: "rubble" },
+    { id: "layer-survivors", name: "survivors" },
+    { id: "layer-hazards", name: "hazards" },
+    { id: "layer-team", name: "team" },
+    { id: "layer-routes", name: "routes" }
+  ];
+
+  layerBindings.forEach(binding => {
+    const el = document.getElementById(binding.id);
+    if (el) {
+      el.addEventListener("change", (e) => {
+        scene3D.setLayerVisibility(binding.name, e.target.checked);
+      });
+    }
+  });
+
+  // Wire Operational Visualization Modes (NORMAL, THERMAL, RADAR, CUTAWAY)
+  const modeButtons = document.querySelectorAll(".mode-btn");
+  modeButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      modeButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const mode = btn.dataset.mode;
+      scene3D.setOperationalMode(mode);
+
+      // In cutaway or radar mode, smoothly glide to the active victim void
+      if (mode === "cutaway" || mode === "radar") {
+        scene3D.focusVictim(currentVictimId);
+      }
+    });
   });
 
   // 5. Simultaneous 3-Route Side-by-Side Calculation & Highlight
@@ -257,12 +320,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".view-btn").forEach(b => b.classList.remove("active"));
     activeBtn.classList.add("active");
   }
-
-  const btnToggleXray = document.getElementById("btn-toggle-xray");
-  btnToggleXray.addEventListener("click", () => {
-    const isXray = scene3D.toggleXrayMode();
-    btnToggleXray.classList.toggle("active", isXray);
-  });
 
   // 9. Sensor Inspection Modal
   const modal = document.getElementById("sensor-modal");

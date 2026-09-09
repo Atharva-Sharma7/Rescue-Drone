@@ -15,6 +15,22 @@ class DisasterScene3D {
     this.droneCameraView = false;
     this.lidarPointCloud = null;
     this.lidarSweepLine = null;
+    this.scanningCone = null;
+
+    // Operational Visualization Modes: "normal", "thermal", "radar", "cutaway"
+    this.activeMode = "normal";
+
+    // Groups for Granular Layer Toggling
+    this.terrainMesh = null;
+    this.terrainWireframe = null;
+    this.buildingsGroup = new THREE.Group();
+    this.rubbleGroup = new THREE.Group();
+    this.survivorsGroup = new THREE.Group();
+    this.hazardsGroup = new THREE.Group();
+    this.routesGroup = new THREE.Group();
+    this.teamGroup = new THREE.Group();
+    this.radarWavesGroup = new THREE.Group();
+    this.thermalPlumesGroup = new THREE.Group();
 
     this.hazardMeshes = [];
     this.victimMarkers = [];
@@ -161,10 +177,20 @@ class DisasterScene3D {
 
     this.generateColorAerialTextures();
 
-    // Scene
+    // Scene - Tactical dark atmosphere with depth fog
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xbdd0e2); // Realistic daylight atmospheric sky
-    this.scene.fog = new THREE.FogExp2(0xbdd0e2, 0.005);
+    this.scene.background = new THREE.Color(0x070d18); // Deep navy tactical command backdrop
+    this.scene.fog = new THREE.FogExp2(0x070d18, 0.0055);
+
+    // Add modular groups to scene for layer toggling
+    this.scene.add(this.buildingsGroup);
+    this.scene.add(this.rubbleGroup);
+    this.scene.add(this.survivorsGroup);
+    this.scene.add(this.hazardsGroup);
+    this.scene.add(this.routesGroup);
+    this.scene.add(this.teamGroup);
+    this.scene.add(this.radarWavesGroup);
+    this.scene.add(this.thermalPlumesGroup);
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 1000);
@@ -197,6 +223,7 @@ class DisasterScene3D {
     this.createCrushedVehicleAndDebris();
     this.createRealisticTrappedHumanBodies();
     this.createHazardOverlays();
+    this.createThermalAndRadarVisualizers();
     this.createQuadcopterDrone();
     this.createGroundRescueTeam();
     this.createAllThreeRoutes();
@@ -209,12 +236,12 @@ class DisasterScene3D {
   }
 
   setupRealisticLighting() {
-    // Ambient light - bright, daylight overcast fill
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.3);
+    // Ambient light - tactical overcast daylight
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.1);
     this.scene.add(ambientLight);
 
     // Strong direct sunlight casting realistic shadows
-    const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.8);
+    const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.6);
     sunLight.position.set(55, 90, 45);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
@@ -230,7 +257,7 @@ class DisasterScene3D {
     this.scene.add(sunLight);
 
     // Sky dome fill light
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x85929e, 0.75);
+    const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x0f172a, 0.6);
     this.scene.add(hemiLight);
   }
 
@@ -280,14 +307,25 @@ class DisasterScene3D {
       flatShading: false
     });
 
-    const terrainMesh = new THREE.Mesh(geometry, terrainMaterial);
-    terrainMesh.receiveShadow = true;
-    this.scene.add(terrainMesh);
+    this.terrainMesh = new THREE.Mesh(geometry, terrainMaterial);
+    this.terrainMesh.receiveShadow = true;
+    this.scene.add(this.terrainMesh);
+
+    // Subtle underlying tactical wireframe mesh (digital twin accent)
+    const wireMat = new THREE.MeshBasicMaterial({
+      color: 0x06b6d4,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.07
+    });
+    this.terrainWireframe = new THREE.Mesh(geometry, wireMat);
+    this.terrainWireframe.position.y += 0.05;
+    this.scene.add(this.terrainWireframe);
   }
 
   // 2. Realistic Multi-Story Collapsed Commercial Building
   createRealisticCollapsedComplex() {
-    const group = new THREE.Group();
+    const group = this.buildingsGroup;
 
     const wallMat = new THREE.MeshStandardMaterial({ map: this.buildingWallTexture, roughness: 0.8 });
     const slabMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.85, flatShading: true });
@@ -353,13 +391,12 @@ class DisasterScene3D {
     storefrontSlab.position.set(22, 1.4, 18);
     storefrontSlab.rotation.z = 0.28;
     group.add(storefrontSlab);
-
-    this.scene.add(group);
+    this.buildingMeshes.push(storefrontSlab);
   }
 
   // 3. Full-Color Rubble Boulders & Concrete Blocks
   createColorRubbleFields() {
-    const rubbleGroup = new THREE.Group();
+    const rubbleGroup = this.rubbleGroup;
 
     const concreteMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.9, flatShading: true });
     const brickChunkMat = new THREE.MeshStandardMaterial({ map: this.brickTexture, roughness: 0.85 });
@@ -397,13 +434,11 @@ class DisasterScene3D {
         rubbleGroup.add(mesh);
       }
     });
-
-    this.scene.add(rubbleGroup);
   }
 
   // Crushed vehicle in parking ramp (Survivor 5)
   createCrushedVehicleAndDebris() {
-    const group = new THREE.Group();
+    const group = this.rubbleGroup;
 
     // Red car body crushed under a fallen beam
     const carMat = new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.7, roughness: 0.3 });
@@ -422,8 +457,7 @@ class DisasterScene3D {
     slabCrush.rotation.z = -0.18;
     slabCrush.castShadow = true;
     group.add(slabCrush);
-
-    this.scene.add(group);
+    this.buildingMeshes.push(slabCrush);
   }
 
   // 4. REALISTIC HUMAN BODIES STUCK IN THE RUBBLE (Visible from Camera & Void Inspect)
@@ -502,6 +536,7 @@ class DisasterScene3D {
       pinningSlab.rotation.z = 0.22;
       pinningSlab.castShadow = true;
       humanGroup.add(pinningSlab);
+      this.buildingMeshes.push(pinningSlab);
 
       // Vital Aura Halo around the trapped human
       const vitalRingGeo = new THREE.RingGeometry(0.75, 0.95, 24);
@@ -518,17 +553,18 @@ class DisasterScene3D {
 
       // Place the 3D human body at their exact trapped coordinates
       humanGroup.position.set(v.coords.x, v.surfaceCoords.y - 0.2, v.coords.z);
-      this.scene.add(humanGroup);
+      this.survivorsGroup.add(humanGroup);
       this.humanSurvivors.push({ model: humanGroup, torso: torso, armReaching: armReaching, victim: v });
 
       // Surface Target Marker (Beacon & Pulse Ring on the rubble surface above them)
       const markerGroup = new THREE.Group();
       const col = new THREE.Color(v.badgeColor);
 
-      // Vertical penetration indicator rod
-      const rodGeo = new THREE.CylinderGeometry(0.06, 0.06, v.depthMeters + 2.5, 8);
-      const rod = new THREE.Mesh(rodGeo, new THREE.MeshBasicMaterial({ color: col }));
-      rod.position.y = (v.depthMeters + 2.5) / 2;
+      // Digital Depth Caliper Rod connecting surface marker directly to trapped human
+      const rodGeo = new THREE.CylinderGeometry(0.04, 0.04, v.depthMeters + 1.2, 8);
+      const rodMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 });
+      const rod = new THREE.Mesh(rodGeo, rodMat);
+      rod.position.y = (v.depthMeters + 1.2) / 2;
       markerGroup.add(rod);
 
       // Surface radar pulse rings
@@ -543,12 +579,12 @@ class DisasterScene3D {
         new THREE.OctahedronGeometry(0.85, 0),
         new THREE.MeshStandardMaterial({ color: col, roughness: 0.2, metalness: 0.8 })
       );
-      diamond.position.y = v.depthMeters + 2.5 + 0.8;
+      diamond.position.y = v.depthMeters + 1.2 + 0.6;
       markerGroup.add(diamond);
 
       markerGroup.position.set(v.surfaceCoords.x, v.surfaceCoords.y, v.surfaceCoords.z);
       markerGroup.userData = { victim: v, diamond: diamond, pulseRing: pulseRing };
-      this.scene.add(markerGroup);
+      this.survivorsGroup.add(markerGroup);
       this.victimMarkers.push(markerGroup);
     });
   }
@@ -558,18 +594,57 @@ class DisasterScene3D {
     const hazardData = window.RESCUE_CONFIG.hazardZones;
     hazardData.forEach(haz => {
       const ringGeo = new THREE.RingGeometry(haz.radius * 0.85, haz.radius, 48).rotateX(-Math.PI / 2);
-      const ringMat = new THREE.MeshBasicMaterial({ color: haz.color, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
+      const ringMat = new THREE.MeshBasicMaterial({ color: haz.color, side: THREE.DoubleSide, transparent: true, opacity: 0.65 });
       const ringMesh = new THREE.Mesh(ringGeo, ringMat);
       ringMesh.position.set(haz.coords.x, 0.16, haz.coords.z);
-      this.scene.add(ringMesh);
+      this.hazardsGroup.add(ringMesh);
 
       const cylGeo = new THREE.CylinderGeometry(haz.radius, haz.radius, 3.5, 32, 1, true);
-      const cylMat = new THREE.MeshBasicMaterial({ color: haz.color, side: THREE.DoubleSide, transparent: true, opacity: 0.08 });
+      const cylMat = new THREE.MeshBasicMaterial({ color: haz.color, side: THREE.DoubleSide, transparent: true, opacity: 0.09 });
       const cylMesh = new THREE.Mesh(cylGeo, cylMat);
       cylMesh.position.set(haz.coords.x, 1.75, haz.coords.z);
-      this.scene.add(cylMesh);
+      this.hazardsGroup.add(cylMesh);
       this.hazardMeshes.push({ ring: ringMesh, cylinder: cylMesh, data: haz });
     });
+  }
+
+  // 5b. Thermal Convective Fissures & Radar Arc Visualizers
+  createThermalAndRadarVisualizers() {
+    // Thermal Hotspots (Warm air leakage around structural cracks)
+    const victims = window.RESCUE_CONFIG.victims;
+    victims.forEach(v => {
+      if (v.thermal && v.thermal.fissurePlumeDetected) {
+        // Glowing LWIR heat aura mesh around surface crack
+        const plumeGeo = new THREE.RingGeometry(0.6, 2.4, 24).rotateX(-Math.PI / 2);
+        const plumeMat = new THREE.MeshBasicMaterial({
+          color: 0xf97316,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.45
+        });
+        const plumeMesh = new THREE.Mesh(plumeGeo, plumeMat);
+        plumeMesh.position.set(v.surfaceCoords.x, v.surfaceCoords.y + 0.08, v.surfaceCoords.z);
+        this.thermalPlumesGroup.add(plumeMesh);
+      }
+
+      // Radar penetrating concentric hemisphere waves
+      for (let w = 1; w <= 3; w++) {
+        const waveGeo = new THREE.SphereGeometry(w * 1.5, 16, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
+        const waveMat = new THREE.MeshBasicMaterial({
+          color: 0x06b6d4,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.25 - (w * 0.06)
+        });
+        const waveMesh = new THREE.Mesh(waveGeo, waveMat);
+        waveMesh.position.set(v.surfaceCoords.x, v.surfaceCoords.y, v.surfaceCoords.z);
+        this.radarWavesGroup.add(waveMesh);
+      }
+    });
+
+    // Hidden by default in NORMAL mode
+    this.thermalPlumesGroup.visible = false;
+    this.radarWavesGroup.visible = false;
   }
 
   // 6. Realistic Quadcopter Drone Model with 4K Gimbal Camera & Spotlight
@@ -630,6 +705,20 @@ class DisasterScene3D {
     this.drone.add(spot);
     this.drone.add(spot.target);
 
+    // Dynamic LiDAR Scanning Cone (Cyan volumetric wireframe projection)
+    const coneGeo = new THREE.ConeGeometry(9.0, 14.0, 32, 1, true);
+    coneGeo.rotateX(Math.PI); // Point downward
+    coneGeo.translate(0, -7.0, 0);
+    const coneMat = new THREE.MeshBasicMaterial({
+      color: 0x06b6d4,
+      transparent: true,
+      opacity: 0.12,
+      wireframe: true,
+      side: THREE.DoubleSide
+    });
+    this.scanningCone = new THREE.Mesh(coneGeo, coneMat);
+    this.drone.add(this.scanningCone);
+
     this.drone.position.set(-14, 13.5, -10);
     this.scene.add(this.drone);
   }
@@ -667,20 +756,20 @@ class DisasterScene3D {
     this.groundTeamPulse = pulseRing;
 
     this.groundTeamMarker.position.set(teamData.currentLocation.x, teamData.currentLocation.y, teamData.currentLocation.z);
-    this.scene.add(this.groundTeamMarker);
+    this.teamGroup.add(this.groundTeamMarker);
   }
 
   // 7. SIMULTANEOUS 3-ROUTE SYSTEM (Safest Green, Moderate Orange, Hard Red)
   createAllThreeRoutes(targetVictimId = "VIC-01") {
-    if (this.safestRouteMesh) this.scene.remove(this.safestRouteMesh);
-    if (this.moderateRouteMesh) this.scene.remove(this.moderateRouteMesh);
-    if (this.hardRouteMesh) this.scene.remove(this.hardRouteMesh);
+    if (this.safestRouteMesh) this.routesGroup.remove(this.safestRouteMesh);
+    if (this.moderateRouteMesh) this.routesGroup.remove(this.moderateRouteMesh);
+    if (this.hardRouteMesh) this.routesGroup.remove(this.hardRouteMesh);
 
     const targetVictim = window.RESCUE_CONFIG.victims.find(v => v.id === targetVictimId) || window.RESCUE_CONFIG.victims[0];
     const start = window.RESCUE_CONFIG.groundTeam.currentLocation;
     const end = targetVictim.surfaceCoords;
 
-    // 1. SAFEST ROUTE (Green)
+    // 1. SAFEST ROUTE (Green) - Hugs clear road terrain (Zone Gamma)
     const safestPoints = [
       new THREE.Vector3(start.x, 0.6, start.z),
       new THREE.Vector3(-38, 0.6, 22),
@@ -691,13 +780,13 @@ class DisasterScene3D {
     const safestCurve = new THREE.CatmullRomCurve3(safestPoints);
     const safestGeo = new THREE.TubeGeometry(safestCurve, 60, 0.45, 8, false);
     const safestMat = new THREE.MeshStandardMaterial({
-      color: 0x16a34a,
-      emissive: 0x15803d,
-      emissiveIntensity: 0.7,
+      color: 0x10b981,
+      emissive: 0x059669,
+      emissiveIntensity: 0.8,
       roughness: 0.3
     });
     this.safestRouteMesh = new THREE.Mesh(safestGeo, safestMat);
-    this.scene.add(this.safestRouteMesh);
+    this.routesGroup.add(this.safestRouteMesh);
 
     // 2. MODERATE ROUTE (Orange)
     const modPoints = [
@@ -712,13 +801,13 @@ class DisasterScene3D {
     const modMat = new THREE.MeshStandardMaterial({
       color: 0xf59e0b,
       emissive: 0xd97706,
-      emissiveIntensity: 0.7,
+      emissiveIntensity: 0.8,
       roughness: 0.3
     });
     this.moderateRouteMesh = new THREE.Mesh(modGeo, modMat);
-    this.scene.add(this.moderateRouteMesh);
+    this.routesGroup.add(this.moderateRouteMesh);
 
-    // 3. HARD / HAZARDOUS ROUTE (Red)
+    // 3. HARD / HAZARDOUS ROUTE (Red) - Direct clambering over fractured slabs
     const hardPoints = [
       new THREE.Vector3(start.x, 0.6, start.z),
       new THREE.Vector3(start.x * 0.65 + end.x * 0.35, 2.2, start.z * 0.65 + end.z * 0.35),
@@ -728,38 +817,86 @@ class DisasterScene3D {
     const hardCurve = new THREE.CatmullRomCurve3(hardPoints);
     const hardGeo = new THREE.TubeGeometry(hardCurve, 60, 0.38, 8, false);
     const hardMat = new THREE.MeshStandardMaterial({
-      color: 0xdc2626,
-      emissive: 0xb91c1c,
-      emissiveIntensity: 0.8,
+      color: 0xef4444,
+      emissive: 0xdc2626,
+      emissiveIntensity: 0.9,
       roughness: 0.3
     });
     this.hardRouteMesh = new THREE.Mesh(hardGeo, hardMat);
-    this.scene.add(this.hardRouteMesh);
+    this.routesGroup.add(this.hardRouteMesh);
   }
 
-  setRouteHighlight(mode) {
-    if (!this.safestRouteMesh || !this.moderateRouteMesh || !this.hardRouteMesh) return;
-    if (mode === "safest") {
-      this.safestRouteMesh.scale.set(1.2, 1.2, 1.2);
-      this.moderateRouteMesh.scale.set(0.8, 0.8, 0.8);
-      this.hardRouteMesh.scale.set(0.8, 0.8, 0.8);
-      this.safestRouteMesh.material.opacity = 1.0;
-      this.moderateRouteMesh.material.opacity = 0.45;
-      this.hardRouteMesh.material.opacity = 0.45;
-    } else if (mode === "quickest") {
-      this.safestRouteMesh.scale.set(0.8, 0.8, 0.8);
-      this.moderateRouteMesh.scale.set(1.2, 1.2, 1.2);
-      this.hardRouteMesh.scale.set(0.8, 0.8, 0.8);
-      this.safestRouteMesh.material.opacity = 0.45;
-      this.moderateRouteMesh.material.opacity = 1.0;
-      this.hardRouteMesh.material.opacity = 0.45;
+  // Set Operational Visualization Mode (NORMAL, THERMAL, RADAR, CUTAWAY)
+  setOperationalMode(mode) {
+    this.activeMode = mode;
+
+    if (mode === "thermal") {
+      // Show convective thermal fissure venting overlays
+      this.thermalPlumesGroup.visible = true;
+      this.radarWavesGroup.visible = false;
+      this.setBuildingOpacity(1.0, false);
+      if (this.terrainWireframe) this.terrainWireframe.visible = true;
+    } else if (mode === "radar") {
+      // Show mmWave & UWB radar wave arcs penetrating rubble
+      this.thermalPlumesGroup.visible = false;
+      this.radarWavesGroup.visible = true;
+      this.setBuildingOpacity(1.0, false);
+      if (this.terrainWireframe) this.terrainWireframe.visible = true;
+    } else if (mode === "cutaway") {
+      // Slabs become semi-transparent (ghosted/wireframe look) revealing interior rooms and trapped survivors
+      this.thermalPlumesGroup.visible = false;
+      this.radarWavesGroup.visible = true;
+      this.setBuildingOpacity(0.25, true);
+      if (this.terrainWireframe) this.terrainWireframe.visible = true;
     } else {
-      this.safestRouteMesh.scale.set(0.8, 0.8, 0.8);
-      this.moderateRouteMesh.scale.set(0.8, 0.8, 0.8);
-      this.hardRouteMesh.scale.set(1.2, 1.2, 1.2);
-      this.safestRouteMesh.material.opacity = 0.45;
-      this.moderateRouteMesh.material.opacity = 0.45;
-      this.hardRouteMesh.material.opacity = 1.0;
+      // NORMAL mode: full daylight photogrammetry mesh
+      this.thermalPlumesGroup.visible = false;
+      this.radarWavesGroup.visible = false;
+      this.setBuildingOpacity(1.0, false);
+      if (this.terrainWireframe) this.terrainWireframe.visible = false;
+    }
+  }
+
+  setBuildingOpacity(opacity, transparent) {
+    this.buildingMeshes.forEach(mesh => {
+      if (mesh.material) {
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach(m => {
+            m.transparent = transparent;
+            m.opacity = opacity;
+          });
+        } else {
+          mesh.material.transparent = transparent;
+          mesh.material.opacity = opacity;
+        }
+      }
+    });
+  }
+
+  // Granular Layer Visibility Toggle (from Left Control Panel)
+  setLayerVisibility(layerName, isVisible) {
+    switch (layerName) {
+      case "terrain":
+        if (this.terrainMesh) this.terrainMesh.visible = isVisible;
+        break;
+      case "buildings":
+        this.buildingsGroup.visible = isVisible;
+        break;
+      case "rubble":
+        this.rubbleGroup.visible = isVisible;
+        break;
+      case "survivors":
+        this.survivorsGroup.visible = isVisible;
+        break;
+      case "hazards":
+        this.hazardsGroup.visible = isVisible;
+        break;
+      case "team":
+        this.teamGroup.visible = isVisible;
+        break;
+      case "routes":
+        this.routesGroup.visible = isVisible;
+        break;
     }
   }
 
@@ -882,6 +1019,31 @@ class DisasterScene3D {
       const gScale = 1.0 + ((elapsed * 1.2) % 1.0) * 2.2;
       this.groundTeamPulse.scale.set(gScale, gScale, 1);
       this.groundTeamPulse.material.opacity = Math.max(0, 0.8 - ((gScale - 1.0) / 2.2));
+    }
+
+    // LiDAR Scanning Cone & Sweep Animation
+    if (this.scanningCone) {
+      this.scanningCone.rotation.y = elapsed * 0.9;
+      // Gentle pulsing sweep opacity
+      this.scanningCone.material.opacity = 0.08 + Math.sin(elapsed * 4.0) * 0.04;
+    }
+
+    // Thermal & Radar visualizer oscillations
+    if (this.radarWavesGroup && this.radarWavesGroup.visible) {
+      this.radarWavesGroup.children.forEach((mesh, idx) => {
+        const pulse = (elapsed * 1.5 + (idx * 0.4)) % 1.5;
+        mesh.scale.set(1.0 + pulse * 0.5, 1.0 + pulse * 0.5, 1.0 + pulse * 0.5);
+      });
+    }
+
+    if (this.thermalPlumesGroup && this.thermalPlumesGroup.visible) {
+      this.thermalPlumesGroup.children.forEach((mesh) => {
+        mesh.scale.set(
+          1.0 + Math.sin(elapsed * 2.5) * 0.15,
+          1.0 + Math.sin(elapsed * 2.5) * 0.15,
+          1.0
+        );
+      });
     }
 
     this.controls.update();
