@@ -66,17 +66,17 @@
       <div class="workflow-sequence-strip">
         <div class="workflow-step active" id="step-btn-1" data-step="1">
           <span class="step-num">STEP 1</span>
-          <span class="step-label">3D LiDAR Aerial Mapping</span>
+          <span class="step-label">Live Video Input & AI Detection</span>
           <i data-lucide="chevron-right" style="width:14px; height:14px;" class="step-arrow"></i>
         </div>
         <div class="workflow-step" id="step-btn-2" data-step="2">
           <span class="step-num">STEP 2</span>
-          <span class="step-label">Sub-Surface Radar & Thermal Scan</span>
+          <span class="step-label">3D Terrain & Digital Twin</span>
           <i data-lucide="chevron-right" style="width:14px; height:14px;" class="step-arrow"></i>
         </div>
         <div class="workflow-step" id="step-btn-3" data-step="3">
           <span class="step-num">STEP 3</span>
-          <span class="step-label">Explainable Survivor Triage</span>
+          <span class="step-label">Sub-Surface Radar & Thermal Scan</span>
           <i data-lucide="chevron-right" style="width:14px; height:14px;" class="step-arrow"></i>
         </div>
         <div class="workflow-step" id="step-btn-4" data-step="4">
@@ -86,91 +86,260 @@
       </div>
     </header>
 
-    <!-- 3. Workspace: 3D High-Realism Disaster Simulation -->
+    <!-- 3. Workspace: Homepage Video Analysis vs. 3D Terrain View -->
     <main class="workspace-area">
-      <div id="three-viewport"></div>
 
-      <!-- Left-Side Tactical Control & Sensor Layer Panel -->
-      <aside class="left-layer-panel">
-        <div>
-          <div class="panel-section-title">
-            <span>MAP DATA LAYERS</span>
-            <i data-lucide="layers" style="width:12px; height:12px;"></i>
+      <!-- ====================================================
+           VIEW A: HOMEPAGE PRIMARY LIVE VIDEO AI ANALYSIS
+           ==================================================== -->
+      <div id="video-feed-view" class="view-pane active">
+        <div class="video-main-layout">
+
+          <!-- Center Stage: Large Disaster Video Player & HUD Overlay -->
+          <div class="video-player-container">
+            <div class="video-top-hud">
+              <div class="hud-stream-label">
+                <span class="pulse-dot" style="background:#ef4444; width:7px; height:7px;"></span>
+                <span style="font-weight:800; color:#f8fafc;">SIMULATED DRONE FEED — AI ANALYSIS</span>
+                <span class="stream-source-badge">RGB 4K OPTICAL &bull; SECTOR A</span>
+              </div>
+              <div class="hud-sub-msg" id="hud-detection-alert">
+                <i data-lucide="scan" style="width:13px; height:13px; color:#38bdf8;"></i>
+                <span id="detection-status-text">AI SURVIVOR DETECTION ACTIVE &bull; Scanning for visible & partially occluded persons</span>
+              </div>
+            </div>
+
+            <!-- The HTML5 Video Element with Actual Disaster Video -->
+            <div class="video-wrapper">
+              <video id="disaster-video" autoplay loop muted playsinline>
+                <source src="assets/disaster-feed.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              <!-- AI Bounding Box & Trajectory Tracking Canvas -->
+              <canvas id="video-ai-canvas"></canvas>
+            </div>
+
+            <!-- Video Player Controls & AI Toggles Strip -->
+            <div class="video-controls-strip">
+              <div class="ctrl-group">
+                <button class="ctrl-btn" id="btn-vid-play"><i data-lucide="play" style="width:13px; height:13px;"></i> PLAY</button>
+                <button class="ctrl-btn" id="btn-vid-pause"><i data-lucide="pause" style="width:13px; height:13px;"></i> PAUSE</button>
+                <button class="ctrl-btn" id="btn-vid-replay"><i data-lucide="rotate-ccw" style="width:13px; height:13px;"></i> REPLAY</button>
+                <button class="ctrl-btn" id="btn-vid-speed"><i data-lucide="gauge" style="width:13px; height:13px;"></i> <span id="speed-val">1×</span></button>
+                <button class="ctrl-btn" id="btn-vid-step"><i data-lucide="step-forward" style="width:13px; height:13px;"></i> FRAME STEP</button>
+              </div>
+
+              <div class="ctrl-group ai-toggles">
+                <label class="toggle-pill active" id="toggle-ai-det">
+                  <i data-lucide="crosshair" style="width:13px; height:13px;"></i>
+                  <span>AI DETECTION: <strong id="val-ai-det">ON</strong></span>
+                </label>
+                <label class="toggle-pill active" id="toggle-tracking">
+                  <i data-lucide="git-commit" style="width:13px; height:13px;"></i>
+                  <span>TRACKING: <strong id="val-tracking">ON</strong></span>
+                </label>
+                <label class="toggle-pill" id="toggle-thermal-demo">
+                  <i data-lucide="flame" style="width:13px; height:13px;"></i>
+                  <span>THERMAL DEMO: <strong id="val-thermal-demo">OFF</strong></span>
+                </label>
+                <label class="toggle-pill" id="toggle-radar-demo">
+                  <i data-lucide="radio" style="width:13px; height:13px;"></i>
+                  <span>RADAR DEMO: <strong id="val-radar-demo">OFF</strong></span>
+                </label>
+                <button class="btn-goto-3d" id="btn-switch-to-3d">
+                  <i data-lucide="box" style="width:14px; height:14px;"></i>
+                  <span>ENTER 3D TERRAIN VIEW</span>
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="layer-toggle-grid">
-            <label class="layer-checkbox-row">
-              <span>3D Terrain & Road Mesh</span>
-              <input type="checkbox" id="layer-terrain" checked>
-            </label>
-            <label class="layer-checkbox-row">
-              <span>Collapsed Structures & Slabs</span>
-              <input type="checkbox" id="layer-buildings" checked>
-            </label>
-            <label class="layer-checkbox-row">
-              <span>Rubble & Concrete Debris</span>
-              <input type="checkbox" id="layer-rubble" checked>
-            </label>
-            <label class="layer-checkbox-row">
-              <span>Trapped Human Silhouettes</span>
-              <input type="checkbox" id="layer-survivors" checked>
-            </label>
-            <label class="layer-checkbox-row">
-              <span>Terrain Risk / Hazard Zones</span>
-              <input type="checkbox" id="layer-hazards" checked>
-            </label>
-            <label class="layer-checkbox-row">
-              <span>Ground Rescue Team</span>
-              <input type="checkbox" id="layer-team" checked>
-            </label>
-            <label class="layer-checkbox-row">
-              <span>3D Route Corridors</span>
-              <input type="checkbox" id="layer-routes" checked>
-            </label>
+
+          <!-- Bottom Grid: Live Analysis Metrics & Selected Survivor Tactical Profile -->
+          <div class="video-meta-grid">
+            <!-- Panel 1: Measured Live Analysis Metrics -->
+            <div class="meta-card">
+              <div class="meta-card-title">
+                <span>AI VIDEO ANALYSIS</span>
+                <span class="status-indicator live">● PROCESSING</span>
+              </div>
+              <div class="metrics-two-col">
+                <div>
+                  <div class="metric-label">FRAMES PROCESSED</div>
+                  <div class="metric-val" id="metric-frames">0</div>
+                </div>
+                <div>
+                  <div class="metric-label">INFERENCE FPS</div>
+                  <div class="metric-val" id="metric-fps">18.4</div>
+                </div>
+                <div>
+                  <div class="metric-label">DETECTION LATENCY</div>
+                  <div class="metric-val" id="metric-latency">32.1 ms</div>
+                </div>
+                <div>
+                  <div class="metric-label">PERSONS DETECTED</div>
+                  <div class="metric-val highlight" id="metric-persons">3</div>
+                </div>
+                <div>
+                  <div class="metric-label">ACTIVE TRACKS</div>
+                  <div class="metric-val" id="metric-tracks">3 (ByteTrack)</div>
+                </div>
+                <div>
+                  <div class="metric-label">MODEL RUNTIME</div>
+                  <div class="metric-val">YOLO11 INT8</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 2: Selected Survivor Profile (Visual vs Sub-Surface Radar) -->
+            <div class="meta-card">
+              <div class="meta-card-title">
+                <span>SELECTED SURVIVOR PROFILE</span>
+                <span class="status-badge-critical" id="card-victim-badge">VIC-01 &bull; HIGH PRIORITY</span>
+              </div>
+              <div class="victim-profile-content">
+                <div class="vp-row">
+                  <span class="vp-k">Visual Detection:</span>
+                  <span class="vp-v" style="color:#10b981; font-weight:700;">✓ Confirmed (RGB Frame Analysis)</span>
+                </div>
+                <div class="vp-row">
+                  <span class="vp-k">Model Confidence:</span>
+                  <span class="vp-v" id="vp-confidence">91% (High Confidence)</span>
+                </div>
+                <div class="vp-row">
+                  <span class="vp-k">Tracking State:</span>
+                  <span class="vp-v" id="vp-tracking">STABLE (Track ID: #1)</span>
+                </div>
+                <div class="vp-row sub-surface-highlight">
+                  <span class="vp-k">SUB-SURFACE TARGET:</span>
+                  <span class="vp-v" style="color:#38bdf8;">Depth: ~2.3m (Radar-Assisted Estimation)</span>
+                </div>
+                <div class="vp-row sensor-status-strip">
+                  <span>mmWave: <strong style="color:#38bdf8;">READY</strong></span>
+                  <span>UWB: <strong style="color:#10b981;">SYNCED</strong></span>
+                  <span>Thermal: <strong style="color:#f59e0b;">VENTING</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 3: Mission Timeline & Live Incident Stream -->
+            <div class="meta-card">
+              <div class="meta-card-title">
+                <span>MISSION INCIDENT TIMELINE</span>
+                <span class="timeline-clock" id="mission-clock">T+ 00:04:18</span>
+              </div>
+              <div class="incident-stream" id="incident-stream-list">
+                <div class="incident-item new">
+                  <span class="inc-time">00:04:12</span>
+                  <span class="inc-msg"><strong>⚠ SURVIVOR DETECTED:</strong> VIC-01 localized under tilted slab (Conf: 91%)</span>
+                </div>
+                <div class="incident-item">
+                  <span class="inc-time">00:03:45</span>
+                  <span class="inc-msg"><strong>AI Tracking Locked:</strong> Multi-target ByteTrack initialized (3 persons detected)</span>
+                </div>
+                <div class="incident-item">
+                  <span class="inc-time">00:02:10</span>
+                  <span class="inc-msg"><strong>Quadcopter Survey:</strong> Commenced Sector A sweep at 12.4m AGL</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div>
-          <div class="panel-section-title">
-            <span>SENSOR MODES</span>
-            <i data-lucide="scan" style="width:12px; height:12px;"></i>
-          </div>
-          <div class="mode-switch-group">
-            <button class="mode-btn active" id="mode-normal" data-mode="normal">NORMAL</button>
-            <button class="mode-btn" id="mode-thermal" data-mode="thermal">THERMAL</button>
-            <button class="mode-btn" id="mode-radar" data-mode="radar">RADAR</button>
-            <button class="mode-btn" id="mode-cutaway" data-mode="cutaway">CUTAWAY</button>
-          </div>
-        </div>
+      <!-- ====================================================
+           VIEW B: 3D TERRAIN & DIGITAL TWIN VIEW
+           ==================================================== -->
+      <div id="terrain-3d-view" class="view-pane">
+        <div id="three-viewport"></div>
 
-        <!-- Live Scanning Telemetry Widget -->
-        <div class="scanning-hud-widget">
-          <div style="font-weight: 700; color: #f8fafc; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
-            <span>LIVE RECONSTRUCTION</span>
-            <span class="pulse-dot" style="width:6px; height:6px; background:#06b6d4;"></span>
-          </div>
-          <div>Sector: <span class="hud-val" id="hud-sector">NORTH-EAST</span></div>
-          <div>Coverage: <span class="hud-val" id="hud-coverage">68%</span></div>
-          <div>Point Capture: <span class="hud-val">48,000 pts/s</span></div>
-          <div>Mesh Confidence: <span class="hud-val">94%</span></div>
-          <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); color: #94a3b8;">
-            AI Fusion Status: <span style="color:#10b981; font-weight:700;">ACTIVE (91%)</span>
-          </div>
-        </div>
-      </aside>
+        <!-- Return to Live Video Button -->
+        <button class="btn-return-video" id="btn-return-video">
+          <i data-lucide="video" style="width:14px; height:14px;"></i>
+          <span>RETURN TO VIDEO FEED</span>
+        </button>
 
-      <!-- Floating Camera View Controls (Top Center) -->
-      <div class="viewport-floating-controls">
-        <div class="floating-btn-group">
-          <button class="view-btn active" id="btn-cam-iso"><i data-lucide="box" style="width:13px; height:13px;"></i> ISOMETRIC</button>
-          <button class="view-btn" id="btn-cam-drone"><i data-lucide="eye" style="width:13px; height:13px;"></i> DRONE POV</button>
-          <button class="view-btn" id="btn-cam-void"><i data-lucide="focus" style="width:13px; height:13px; color: #ef4444;"></i> INSPECT VOID</button>
-          <button class="view-btn" id="btn-cam-top"><i data-lucide="grid" style="width:13px; height:13px;"></i> 2D GRID</button>
-        </div>
+        <!-- Left-Side Tactical Control & Sensor Layer Panel -->
+        <aside class="left-layer-panel">
+          <div>
+            <div class="panel-section-title">
+              <span>MAP DATA LAYERS</span>
+              <i data-lucide="layers" style="width:12px; height:12px;"></i>
+            </div>
+            <div class="layer-toggle-grid">
+              <label class="layer-checkbox-row">
+                <span>3D Terrain & Road Mesh</span>
+                <input type="checkbox" id="layer-terrain" checked>
+              </label>
+              <label class="layer-checkbox-row">
+                <span>Collapsed Structures & Slabs</span>
+                <input type="checkbox" id="layer-buildings" checked>
+              </label>
+              <label class="layer-checkbox-row">
+                <span>Rubble & Concrete Debris</span>
+                <input type="checkbox" id="layer-rubble" checked>
+              </label>
+              <label class="layer-checkbox-row">
+                <span>Trapped Human Silhouettes</span>
+                <input type="checkbox" id="layer-survivors" checked>
+              </label>
+              <label class="layer-checkbox-row">
+                <span>Terrain Risk / Hazard Zones</span>
+                <input type="checkbox" id="layer-hazards" checked>
+              </label>
+              <label class="layer-checkbox-row">
+                <span>Ground Rescue Team</span>
+                <input type="checkbox" id="layer-team" checked>
+              </label>
+              <label class="layer-checkbox-row">
+                <span>3D Route Corridors</span>
+                <input type="checkbox" id="layer-routes" checked>
+              </label>
+            </div>
+          </div>
 
-        <div style="display: flex; gap: 8px;">
-          <div class="prototype-tag">
-            <span class="pulse-dot" style="width:7px; height:7px; background:#06b6d4;"></span>
-            <span>LiDAR + RGB FUSION &bull; ACTIVE 4K MESH</span>
+          <div>
+            <div class="panel-section-title">
+              <span>SENSOR MODES</span>
+              <i data-lucide="scan" style="width:12px; height:12px;"></i>
+            </div>
+            <div class="mode-switch-group">
+              <button class="mode-btn active" id="mode-normal" data-mode="normal">NORMAL</button>
+              <button class="mode-btn" id="mode-thermal" data-mode="thermal">THERMAL</button>
+              <button class="mode-btn" id="mode-radar" data-mode="radar">RADAR</button>
+              <button class="mode-btn" id="mode-cutaway" data-mode="cutaway">CUTAWAY</button>
+            </div>
+          </div>
+
+          <!-- Live Scanning Telemetry Widget -->
+          <div class="scanning-hud-widget">
+            <div style="font-weight: 700; color: #f8fafc; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+              <span>3D DIGITAL TWIN</span>
+              <span class="pulse-dot" style="width:6px; height:6px; background:#06b6d4;"></span>
+            </div>
+            <div>Sector: <span class="hud-val" id="hud-sector">NORTH-EAST</span></div>
+            <div>Coverage: <span class="hud-val" id="hud-coverage">68%</span></div>
+            <div>Point Capture: <span class="hud-val">48,000 pts/s</span></div>
+            <div>Mesh Confidence: <span class="hud-val">94%</span></div>
+            <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06); color: #94a3b8;">
+              AI Fusion Status: <span style="color:#10b981; font-weight:700;">ACTIVE (91%)</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Floating Camera View Controls (Top Center) -->
+        <div class="viewport-floating-controls">
+          <div class="floating-btn-group">
+            <button class="view-btn active" id="btn-cam-iso"><i data-lucide="box" style="width:13px; height:13px;"></i> ISOMETRIC</button>
+            <button class="view-btn" id="btn-cam-drone"><i data-lucide="eye" style="width:13px; height:13px;"></i> DRONE POV</button>
+            <button class="view-btn" id="btn-cam-void"><i data-lucide="focus" style="width:13px; height:13px; color: #ef4444;"></i> INSPECT VOID</button>
+            <button class="view-btn" id="btn-cam-top"><i data-lucide="grid" style="width:13px; height:13px;"></i> 2D GRID</button>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <div class="prototype-tag">
+              <span class="pulse-dot" style="width:7px; height:7px; background:#06b6d4;"></span>
+              <span>LiDAR + RGB FUSION &bull; ACTIVE 4K MESH</span>
+            </div>
           </div>
         </div>
       </div>
@@ -434,6 +603,7 @@
   <script src="js/router.js"></script>
   <script src="js/sensors.js"></script>
   <script src="js/three-scene.js"></script>
+  <script src="js/video-tracker.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

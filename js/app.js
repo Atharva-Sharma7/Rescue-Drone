@@ -6,10 +6,135 @@
 document.addEventListener("DOMContentLoaded", () => {
   if (window.lucide) lucide.createIcons();
 
-  // 1. Initialize 3D Disaster Scene
+  // 1. Initialize 3D Disaster Scene (for Step 2 / 3D Terrain View)
   const scene3D = new DisasterScene3D("three-viewport");
 
-  // 2. Initialize Path Planner
+  // 2. Initialize Disaster Video AI Tracker (Homepage Primary View)
+  let videoTracker = null;
+  const videoElem = document.getElementById("disaster-video");
+  const canvasElem = document.getElementById("video-ai-canvas");
+
+  if (videoElem && canvasElem) {
+    videoTracker = new DisasterVideoTracker("disaster-video", "video-ai-canvas", {
+      onMetrics: (metrics) => {
+        const elFrames = document.getElementById("metric-frames");
+        const elFps = document.getElementById("metric-fps");
+        const elLat = document.getElementById("metric-latency");
+        const elPersons = document.getElementById("metric-persons");
+        const elTracks = document.getElementById("metric-tracks");
+
+        if (elFrames) elFrames.textContent = metrics.framesProcessed;
+        if (elFps) elFps.textContent = metrics.fps;
+        if (elLat) elLat.textContent = `${metrics.latencyMs} ms`;
+        if (elPersons) elPersons.textContent = metrics.personsDetected;
+        if (elTracks) elTracks.textContent = `${metrics.activeTracks} (ByteTrack)`;
+
+        // Update detection alert banner
+        const statusText = document.getElementById("detection-status-text");
+        if (statusText) {
+          if (metrics.personsDetected > 0) {
+            statusText.innerHTML = `<span style="color:#ef4444; font-weight:800;">SURVIVOR DETECTED:</span> VIC-01 &bull; HIGH CONFIDENCE (${metrics.primaryVictim ? metrics.primaryVictim.conf : 91}%)`;
+          } else {
+            statusText.textContent = "NO CONFIRMED SURVIVOR • CONTINUE SCANNING";
+          }
+        }
+      }
+    });
+
+    // Video Player Button Listeners
+    const btnPlay = document.getElementById("btn-vid-play");
+    const btnPause = document.getElementById("btn-vid-pause");
+    const btnReplay = document.getElementById("btn-vid-replay");
+    const btnSpeed = document.getElementById("btn-vid-speed");
+    const btnStep = document.getElementById("btn-vid-step");
+
+    if (btnPlay) btnPlay.addEventListener("click", () => videoElem.play());
+    if (btnPause) btnPause.addEventListener("click", () => videoElem.pause());
+    if (btnReplay) btnReplay.addEventListener("click", () => {
+      videoElem.currentTime = 0;
+      videoElem.play();
+    });
+
+    let currentSpeed = 1;
+    if (btnSpeed) btnSpeed.addEventListener("click", () => {
+      currentSpeed = currentSpeed === 1 ? 2 : 1;
+      videoElem.playbackRate = currentSpeed;
+      document.getElementById("speed-val").textContent = `${currentSpeed}×`;
+    });
+
+    if (btnStep) btnStep.addEventListener("click", () => {
+      if (videoTracker) videoTracker.stepForward(3);
+    });
+
+    // AI Toggle Switches
+    const tAiDet = document.getElementById("toggle-ai-det");
+    const tTracking = document.getElementById("toggle-tracking");
+    const tThermal = document.getElementById("toggle-thermal-demo");
+    const tRadar = document.getElementById("toggle-radar-demo");
+
+    if (tAiDet) {
+      tAiDet.addEventListener("click", () => {
+        const isAct = tAiDet.classList.toggle("active");
+        document.getElementById("val-ai-det").textContent = isAct ? "ON" : "OFF";
+        if (videoTracker) videoTracker.toggleAiDetection(isAct);
+      });
+    }
+
+    if (tTracking) {
+      tTracking.addEventListener("click", () => {
+        const isAct = tTracking.classList.toggle("active");
+        document.getElementById("val-tracking").textContent = isAct ? "ON" : "OFF";
+        if (videoTracker) videoTracker.toggleTracking(isAct);
+      });
+    }
+
+    if (tThermal) {
+      tThermal.addEventListener("click", () => {
+        const isAct = tThermal.classList.toggle("active");
+        document.getElementById("val-thermal-demo").textContent = isAct ? "ON" : "OFF";
+        if (videoTracker) videoTracker.toggleThermalDemo(isAct);
+      });
+    }
+
+    if (tRadar) {
+      tRadar.addEventListener("click", () => {
+        const isAct = tRadar.classList.toggle("active");
+        document.getElementById("val-radar-demo").textContent = isAct ? "ON" : "OFF";
+        if (videoTracker) videoTracker.toggleRadarDemo(isAct);
+      });
+    }
+  }
+
+  // 3. View Switcher between Homepage Video and 3D Terrain
+  function switchToView(viewName) {
+    const videoPane = document.getElementById("video-feed-view");
+    const terrainPane = document.getElementById("terrain-3d-view");
+
+    if (viewName === "video") {
+      if (videoPane) videoPane.classList.add("active");
+      if (terrainPane) terrainPane.classList.remove("active");
+      setWorkflowStep(1, false);
+      if (videoElem && videoElem.paused) videoElem.play();
+    } else {
+      if (videoPane) videoPane.classList.remove("active");
+      if (terrainPane) terrainPane.classList.add("active");
+      setWorkflowStep(2, false);
+      // Trigger Three.js resize to ensure canvas fits perfectly
+      scene3D.onWindowResize();
+    }
+  }
+
+  const btnSwitchTo3D = document.getElementById("btn-switch-to-3d");
+  if (btnSwitchTo3D) {
+    btnSwitchTo3D.addEventListener("click", () => switchToView("terrain"));
+  }
+
+  const btnReturnVideo = document.getElementById("btn-return-video");
+  if (btnReturnVideo) {
+    btnReturnVideo.addEventListener("click", () => switchToView("video"));
+  }
+
+  // 4. Initialize Path Planner
   const router = new RescuePathPlanner(
     window.RESCUE_CONFIG.hazardZones,
     window.RESCUE_CONFIG.groundTeam.currentLocation
@@ -268,33 +393,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 7. 4-Step Mission Pipeline (In Sequence)
   const stepButtons = document.querySelectorAll(".workflow-step");
-  function setWorkflowStep(stepNum) {
+  function setWorkflowStep(stepNum, doSwitch = true) {
     activeStep = stepNum;
     stepButtons.forEach(b => b.classList.remove("active"));
     const activeBtn = document.getElementById(`step-btn-${stepNum}`);
     if (activeBtn) activeBtn.classList.add("active");
 
     if (stepNum === 1) {
-      // Step 1: Aerial 3D LiDAR Survey
+      // Step 1: Live Video Input & AI Detection (Homepage Hero)
+      if (doSwitch) switchToView("video");
+    } else if (stepNum === 2) {
+      // Step 2: 3D Terrain & Digital Twin
+      if (doSwitch) switchToView("terrain");
       scene3D.setCameraView("iso");
       if (scene3D.lidarPointCloud) scene3D.lidarPointCloud.visible = true;
-      if (scene3D.xrayMode) scene3D.toggleXrayMode();
-    } else if (stepNum === 2) {
-      // Step 2: Sub-Surface Victim Localization & Cutaway
-      scene3D.setCameraView("void_inspect");
     } else if (stepNum === 3) {
-      // Step 3: Explainable Triage Analysis
+      // Step 3: Sub-Surface Radar & Thermal Scan Modal
+      if (doSwitch) switchToView("terrain");
+      scene3D.setCameraView("void_inspect");
       openSensorModal(currentVictimId);
     } else if (stepNum === 4) {
       // Step 4: 3D Route Planning (Safest / Moderate / Hard)
+      if (doSwitch) switchToView("terrain");
       scene3D.setCameraView("iso");
       updateRouteCalculations();
+      highlightRouteRow("safest");
     }
   }
 
   stepButtons.forEach(btn => {
     btn.addEventListener("click", () => {
-      setWorkflowStep(parseInt(btn.dataset.step, 10));
+      setWorkflowStep(parseInt(btn.dataset.step, 10), true);
     });
   });
 
