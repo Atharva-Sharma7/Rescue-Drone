@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Project TRINETRA - AI-Powered Drone Search & Rescue System | SIH</title>
+  <title>AeroScan 3D - Autonomous Drone Search & Rescue Mission Control</title>
   
-  <!-- Non-AI Human Engineering Typography -->
+  <!-- Professional Human Engineering Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,19 +22,20 @@
 <body>
   <div id="app-container">
 
-    <!-- 1. Header & Live Disaster Casualty Status Board -->
+    <!-- 1. Clean Professional Command Header (Unnecessary clutter removed) -->
     <header class="mission-header">
       <div class="header-top-row">
         <div class="brand-badge-group">
-          <div class="sih-tag">SIH 2026</div>
           <div class="mission-title">
             <span class="pulse-dot"></span>
-            Project TRINETRA: Drone Search & Rescue Platform
-            <span style="font-size: 11px; font-weight: 600; color: #475569; background: #f1f5f9; padding: 2px 7px; border-radius: 4px; border: 1px solid #e2e8f0;">QUADCOPTER MULTI-SENSOR</span>
+            AEROSCAN SAR-3D
+            <span style="font-size: 11px; font-weight: 600; color: #475569; background: #f1f5f9; padding: 3px 8px; border-radius: 4px; border: 1px solid #e2e8f0;">
+              DISASTER RECONNAISSANCE & SUB-SURFACE LOCALIZATION
+            </span>
           </div>
         </div>
 
-        <!-- Live Casualty & Disaster Sector Counter -->
+        <!-- Clean Operational Telemetry & Casualty Counter -->
         <div class="casualty-status-strip">
           <div class="status-badge missing">
             <i data-lucide="alert-circle" style="width:14px; height:14px;"></i>
@@ -45,94 +46,86 @@
             <span>5 SURVIVORS LOCALIZED</span>
           </div>
 
-          <!-- 3-Route Legend in Header -->
-          <div class="routes-legend-strip">
-            <span style="color: var(--text-muted); font-size: 10px;">ROUTES:</span>
-            <div class="legend-item">
-              <span class="legend-line safest"></span>
-              <span style="color: var(--route-safest);">SAFEST</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-line moderate"></span>
-              <span style="color: var(--route-moderate);">MODERATE</span>
-            </div>
-            <div class="legend-item">
-              <span class="legend-line hard"></span>
-              <span style="color: var(--route-hard);">HARD</span>
-            </div>
+          <!-- Drone Flight & Sensor Telemetry -->
+          <div class="status-badge telemetry">
+            <i data-lucide="crosshair" style="width:13px; height:13px; color: #0284c7;"></i>
+            <span>QUADCOPTER: 12.4m AGL &bull; HOVER LOCKED</span>
           </div>
-
-          <button class="btn-tactical" id="btn-open-hf-hub" style="font-size: 11px;">
-            <i data-lucide="cpu" style="width:13px; height:13px;"></i> HF MODELS
-          </button>
-          <button class="btn-tactical" id="btn-open-ai-chat" style="font-size: 11px; background: #0f172a; color: #fff; border-color: #0f172a;">
-            <i data-lucide="bot" style="width:13px; height:13px;"></i> AI COPILOT
-          </button>
-          <button class="btn-tactical" id="btn-export-mission" style="font-size: 11px;">
-            <i data-lucide="file-text" style="width:13px; height:13px;"></i> BRIEFING
-          </button>
+          <div class="status-badge telemetry">
+            <i data-lucide="battery-charging" style="width:14px; height:14px; color: #16a34a;"></i>
+            <span>BATTERY: 74% (23m)</span>
+          </div>
+          <div class="status-badge telemetry">
+            <i data-lucide="radio" style="width:14px; height:14px; color: #16a34a;"></i>
+            <span>LORA MESH: 4 NODES</span>
+          </div>
         </div>
       </div>
 
-      <!-- Innovation & Uniqueness Callout Bar -->
-      <div class="innovation-banner">
-        <div class="innovation-label">
-          <i data-lucide="sparkles" style="width:14px; height:14px;"></i>
-          Innovation & Uniqueness:
+      <!-- 2. Sequential Mission Workflow Pipeline -->
+      <div class="workflow-sequence-strip">
+        <div class="workflow-step active" id="step-btn-1" data-step="1">
+          <span class="step-num">STEP 1</span>
+          <span class="step-label">3D LiDAR Aerial Mapping</span>
+          <i data-lucide="chevron-right" style="width:14px; height:14px;" class="step-arrow"></i>
         </div>
-        <div class="innovation-items">
-          <div class="innovation-pill">
-            <i data-lucide="layers" style="width:13px; height:13px;"></i>
-            <span>Integrates 3D victim localization, hazard mapping, and multi-victim rescue planning.</span>
-          </div>
-          <div class="innovation-pill">
-            <i data-lucide="compass" style="width:13px; height:13px;"></i>
-            <span>Finds the safest, shortest, and quickest rescue paths using 3D disaster analysis.</span>
-          </div>
-          <div class="innovation-pill">
-            <i data-lucide="git-merge" style="width:13px; height:13px;"></i>
-            <span>Uses priority-aware optimization to plan the most efficient rescue sequence for all victims.</span>
-          </div>
+        <div class="workflow-step" id="step-btn-2" data-step="2">
+          <span class="step-num">STEP 2</span>
+          <span class="step-label">Sub-Surface Radar & Thermal Scan</span>
+          <i data-lucide="chevron-right" style="width:14px; height:14px;" class="step-arrow"></i>
+        </div>
+        <div class="workflow-step" id="step-btn-3" data-step="3">
+          <span class="step-num">STEP 3</span>
+          <span class="step-label">Explainable Survivor Triage</span>
+          <i data-lucide="chevron-right" style="width:14px; height:14px;" class="step-arrow"></i>
+        </div>
+        <div class="workflow-step" id="step-btn-4" data-step="4">
+          <span class="step-num">STEP 4</span>
+          <span class="step-label">3D Route Planning (Safest / Moderate / Hard)</span>
         </div>
       </div>
     </header>
 
-    <!-- 2. Workspace: 3D Disaster Simulation + Floating Panels -->
+    <!-- 3. Workspace: 3D High-Realism Disaster Simulation -->
     <main class="workspace-area">
       <div id="three-viewport"></div>
 
-      <!-- Floating Camera Controls & Continuous LiDAR Indicator -->
+      <!-- Floating Camera View & Void X-Ray Controls -->
       <div class="viewport-floating-controls">
         <div class="floating-btn-group">
           <button class="view-btn active" id="btn-cam-iso"><i data-lucide="box" style="width:13px; height:13px;"></i> ISOMETRIC</button>
           <button class="view-btn" id="btn-cam-drone"><i data-lucide="eye" style="width:13px; height:13px;"></i> DRONE POV</button>
-          <button class="view-btn" id="btn-cam-team"><i data-lucide="navigation" style="width:13px; height:13px;"></i> TEAM ALPHA</button>
+          <button class="view-btn" id="btn-cam-void"><i data-lucide="focus" style="width:13px; height:13px; color: #dc2626;"></i> INSPECT VOID & SURVIVOR</button>
           <button class="view-btn" id="btn-cam-top"><i data-lucide="grid" style="width:13px; height:13px;"></i> 2D GRID</button>
         </div>
 
         <div style="display: flex; gap: 8px;">
+          <button class="toggle-pill active" id="btn-toggle-xray">
+            <i data-lucide="layers" style="width:13px; height:13px; color: #0284c7;"></i>
+            <span>VOID CUTAWAY / X-RAY (SEE INSIDE SLABS)</span>
+          </button>
           <div class="prototype-tag">
             <span class="pulse-dot" style="width:7px; height:7px; background:#0284c7;"></span>
-            <span>CONTINUOUS LiDAR MAPPING (48k PTS)</span>
+            <span>LiDAR SCAN ACTIVE &bull; 48,000 PTS CONTINUOUS</span>
           </div>
         </div>
       </div>
 
-      <!-- Floating Right Panel: 3D Route Planning & Multi-Victim Sequencer -->
+      <!-- Floating Right Panel: 3D Multi-Route Analysis & Path Planning -->
       <aside class="right-route-panel">
         <div class="panel-header">
           <div class="panel-title">
-            <i data-lucide="route" style="width:16px; height:16px; color: var(--accent-blue);"></i>
-            3D Multi-Route Analysis & Path Planning
+            <i data-lucide="route" style="width:16px; height:16px; color: #0284c7;"></i>
+            3D Route Planning & Optimization
           </div>
-          <span style="font-size: 10px; font-family: var(--font-mono); color: var(--text-muted);">A* 3D GRID</span>
+          <span style="font-size: 10.5px; font-family: var(--font-mono); color: var(--text-muted);">STEP 4 PIPELINE</span>
         </div>
 
         <div class="panel-body">
           <!-- Target Survivor Selector -->
           <div>
             <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; display: block;">
-              Target Survivor:
+              Target Survivor Destination:
             </label>
             <select id="victim-select-dropdown" style="width: 100%; background: #ffffff; border: 1px solid var(--border-main); color: var(--text-main); padding: 7px 10px; border-radius: 6px; font-size: 12px; font-family: var(--font-mono); outline: none;">
               <!-- Populated dynamically -->
@@ -185,7 +178,7 @@
           <!-- Tactical Directions -->
           <div>
             <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
-              <span>Ground Team Tactical Guidance</span>
+              <span>Ground Team Tactical Navigation</span>
               <span id="route-active-mode-tag" style="color: var(--route-safest); font-size: 10px; font-weight:700;">SAFEST CORRIDOR</span>
             </div>
             <div class="directions-list" id="route-directions-content">
@@ -211,11 +204,10 @@
       <section class="bottom-triage-tray">
         <div class="tray-header">
           <div class="tray-title">
-            <i data-lucide="users" style="width:14px; height:14px; color: var(--accent-blue);"></i>
+            <i data-lucide="users" style="width:14px; height:14px; color: #0284c7;"></i>
             Localized Survivors & Multi-Sensor Signatures
           </div>
           
-          <!-- Filter Tabs for Detection Types -->
           <div class="filter-pill-group">
             <button class="filter-btn active" data-filter="all">All (5)</button>
             <button class="filter-btn" data-filter="phone_breathing">Phone + Breathing (3)</button>
@@ -230,12 +222,12 @@
       </section>
     </main>
 
-    <!-- 3. Multi-Sensor Inspection Modal -->
+    <!-- 4. Multi-Sensor Inspection Modal -->
     <div class="modal-backdrop" id="sensor-modal">
       <div class="modal-dialog">
         <div class="modal-header">
           <div class="modal-title">
-            <i data-lucide="activity" style="width:18px; height:18px; color: var(--accent-blue);"></i>
+            <i data-lucide="activity" style="width:18px; height:18px; color: #0284c7;"></i>
             <span id="modal-victim-title">Survivor Sensor Fusion & Physiological Telemetry</span>
           </div>
           <button class="modal-close-btn" id="modal-close-btn">&times;</button>
@@ -271,7 +263,7 @@
             <div class="sensor-box">
               <div class="sensor-box-title">
                 <span>3. Digital Rescue SDR Sniffer</span>
-                <span style="color: var(--accent-blue); font-size: 10px; font-weight:700;">RF BEACON MATCH</span>
+                <span style="color: #0284c7; font-size: 10px; font-weight:700;">RF BEACON MATCH</span>
               </div>
               <canvas id="canvas-sdr" class="sensor-canvas" width="400" height="140"></canvas>
               <div class="sensor-desc">
@@ -305,9 +297,6 @@
         </div>
 
         <div class="modal-footer">
-          <button class="btn-tactical" id="modal-btn-ai-extraction" style="color: var(--accent-purple); border-color: #ddd6fe; background: #f5f3ff;">
-            <i data-lucide="sparkles" style="width:14px; height:14px;"></i> GROQ AI EXTRACTION PLAN
-          </button>
           <button class="btn-tactical" id="modal-btn-plan-route">
             <i data-lucide="navigation" style="width:14px; height:14px;"></i> FOCUS ON 3D MAP
           </button>
@@ -318,91 +307,6 @@
       </div>
     </div>
 
-    <!-- 4. Mission Export & Briefing Modal -->
-    <div class="modal-backdrop" id="export-modal">
-      <div class="modal-dialog" style="width: 720px;">
-        <div class="modal-header">
-          <div class="modal-title">
-            <i data-lucide="clipboard-list" style="width:18px; height:18px;"></i>
-            Tactical Mission Briefing & Decision-Support Package
-          </div>
-          <button class="modal-close-btn" id="export-modal-close-btn">&times;</button>
-        </div>
-        <div class="modal-content" style="gap: 12px;">
-          <p style="font-size: 12px; color: var(--text-muted);">
-            Official rescue briefing ready for NDRF/SDRF commanders, detailing 3D localized victims, sensor telemetry, and risk-optimized routing.
-          </p>
-          <pre id="export-json-preview" style="background: #f8fafc; border: 1px solid var(--border-main); padding: 14px; border-radius: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--text-secondary); max-height: 380px; overflow-y: auto; white-space: pre-wrap;"></pre>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-tactical" id="btn-copy-briefing"><i data-lucide="copy" style="width:14px; height:14px;"></i> COPY BRIEFING</button>
-          <button class="btn-tactical btn-green" id="btn-download-briefing"><i data-lucide="download" style="width:14px; height:14px;"></i> DOWNLOAD JSON</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 5. Hugging Face Pre-trained Models Hub Modal -->
-    <div class="modal-backdrop" id="hf-modal">
-      <div class="modal-dialog" style="width: 860px;">
-        <div class="modal-header">
-          <div class="modal-title">
-            <span style="font-size: 20px;">🤗</span>
-            <span>Hugging Face Pre-trained Models Hub (Edge ONNX / TensorRT INT8)</span>
-          </div>
-          <button class="modal-close-btn" id="hf-modal-close-btn">&times;</button>
-        </div>
-        <div class="modal-content" style="gap: 16px;">
-          <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
-            The system integrates pre-trained deep learning models from the <strong>Hugging Face Hub</strong> optimized for drone edge inference. These models process real-time thermal infrared, radar micro-Doppler spectrograms, and emergency signal texts directly on the quadcopter's NVIDIA Jetson Orin Nano with zero cloud dependency.
-          </div>
-          <div id="hf-models-container" style="display: flex; flex-direction: column; gap: 12px;">
-            <!-- Dynamically populated model cards -->
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-tactical btn-green" id="hf-modal-close-footer"><i data-lucide="check" style="width:14px; height:14px;"></i> CLOSE HUB</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 6. AI Tactical SAR Commander Floating Chat Drawer -->
-    <div id="ai-chat-drawer" class="ai-chat-drawer">
-      <div class="chat-header">
-        <div class="chat-title">
-          <i data-lucide="bot" style="width:16px; height:16px; color: var(--accent-purple);"></i>
-          <span>AI SAR Tactical Copilot</span>
-          <span style="font-size: 10px; font-family: var(--font-mono); color: #0369a1; background: #e0f2fe; padding: 1px 6px; border-radius: 4px;">Groq Qwen 27B</span>
-        </div>
-        <button class="chat-close-btn" id="ai-chat-close-btn">&times;</button>
-      </div>
-
-      <div class="chat-messages" id="chat-messages-container">
-        <div class="chat-bubble ai">
-          <strong>Tactical SAR Copilot Online.</strong><br>
-          I am your AI decision-support assistant for Project TRINETRA. Ask me for structural shoring sequences, victim vitals evaluation, or safe route clearances.
-        </div>
-      </div>
-
-      <!-- Quick Suggestion Chips -->
-      <div class="chat-suggestions">
-        <button class="suggestion-chip" data-query="What shoring sequence is required for Survivor 1 with the leaning column?">Shoring for Survivor 1?</button>
-        <button class="suggestion-chip" data-query="Explain why Survivor 4 has 7 bpm respiration and what emergency equipment is urgent.">Survivor 4 Emergency Protocol?</button>
-        <button class="suggestion-chip" data-query="How does UWB radar differ from crack-focused thermal in suppressing false positives?">Sensor Fusion vs False Positives?</button>
-        <button class="suggestion-chip" data-query="Why is Safest Route recommended over Hard Route in Zone Alpha?">Why avoid Hard Route?</button>
-      </div>
-
-      <div class="chat-input-row">
-        <input type="text" id="chat-input-field" placeholder="Ask tactical SAR question..." />
-        <button id="chat-send-btn"><i data-lucide="send" style="width:14px; height:14px;"></i></button>
-      </div>
-    </div>
-
-    <!-- Floating AI Copilot Trigger Button (Bottom Right) -->
-    <button id="floating-ai-trigger" class="floating-ai-trigger">
-      <i data-lucide="bot" style="width:18px; height:18px;"></i>
-      <span>AI TACTICAL COPILOT</span>
-    </button>
-
   </div>
 
   <!-- JavaScript Modules -->
@@ -410,8 +314,6 @@
   <script src="js/prioritization.js"></script>
   <script src="js/router.js"></script>
   <script src="js/sensors.js"></script>
-  <script src="js/hf-models.js"></script>
-  <script src="js/groq-copilot.js"></script>
   <script src="js/three-scene.js"></script>
   <script src="js/app.js"></script>
 </body>
