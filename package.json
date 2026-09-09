@@ -1,0 +1,21 @@
+{
+  "name": "ai-rescue-drone-sih",
+  "version": "1.0.0",
+  "description": "AI-Powered Quadcopter Drone Search & Rescue Mission Control Dashboard - Smart India Hackathon",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000 || npx serve ."
+  },
+  "keywords": [
+    "sih",
+    "search-and-rescue",
+    "quadcopter",
+    "drone",
+    "lidar",
+    "radar",
+    "sensor-fusion",
+    "path-planning"
+  ],
+  "author": "SIH Rescue Team",
+  "license": "MIT"
+}
