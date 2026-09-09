@@ -1,6 +1,7 @@
 /**
- * High-Realism 3D Disaster Zone Simulation - AeroScan SAR
- * Procedural PBR Textures, Collapsed Multi-Story Buildings, Internal Voids & Trapped Survivors
+ * AeroScan True-Color Photogrammetry & LiDAR 3D Disaster Zone
+ * Complete 3D Terrain in Color (Drone 4K Camera + LiDAR Fusion)
+ * Detailed 3D Human Bodies Trapped in Rubble
  */
 
 class DisasterScene3D {
@@ -11,16 +12,14 @@ class DisasterScene3D {
     this.renderer = null;
     this.controls = null;
     this.drone = null;
-    this.droneSpotlight = null;
-    this.lidarBeam = null;
+    this.droneCameraView = false;
     this.lidarPointCloud = null;
     this.lidarSweepLine = null;
-    this.dustParticles = null;
 
     this.hazardMeshes = [];
     this.victimMarkers = [];
-    this.survivorModels = [];
-    this.buildingSlabs = [];
+    this.humanSurvivors = [];
+    this.buildingMeshes = [];
     this.groundTeamMarker = null;
 
     // Simultaneous 3-Route Meshes
@@ -32,111 +31,144 @@ class DisasterScene3D {
     this.mouse = new THREE.Vector2();
     this.rotors = [];
     this.clock = new THREE.Clock();
-    this.xrayMode = false;
-    this.selectedVictimId = null;
+    this.selectedVictimId = "VIC-01";
     this.onVictimSelectCallback = null;
 
     this.init();
   }
 
-  // Generate realistic procedural textures via HTML5 Canvas
-  generateTextures() {
-    // 1. Concrete Debris Texture (with cracks, dirt, and stone aggregate)
-    const concreteCanvas = document.createElement("canvas");
-    concreteCanvas.width = 512;
-    concreteCanvas.height = 512;
-    const cctx = concreteCanvas.getContext("2d");
-    cctx.fillStyle = "#8a94a0";
-    cctx.fillRect(0, 0, 512, 512);
+  // Generate rich true-color aerial photogrammetry textures
+  generateColorAerialTextures() {
+    // 1. Full-Color Aerial Orthomosaic (Asphalt, Concrete Rubble, Earth, Grass Borders)
+    const aerialCanvas = document.createElement("canvas");
+    aerialCanvas.width = 1024;
+    aerialCanvas.height = 1024;
+    const ctx = aerialCanvas.getContext("2d");
 
-    // Add aggregate noise
-    for (let i = 0; i < 30000; i++) {
-      const shade = Math.floor(100 + Math.random() * 80);
-      cctx.fillStyle = `rgba(${shade}, ${shade}, ${shade}, 0.25)`;
-      cctx.fillRect(Math.random() * 512, Math.random() * 512, 2, 2);
+    // Base earth/ground (warm grayish-tan soil)
+    ctx.fillStyle = "#8a7e72";
+    ctx.fillRect(0, 0, 1024, 1024);
+
+    // Patchy vegetation on perimeter
+    ctx.fillStyle = "#4a6741";
+    for (let i = 0; i < 60; i++) {
+      const x = (Math.random() < 0.5 ? Math.random() * 250 : 774 + Math.random() * 250);
+      const y = Math.random() * 1024;
+      ctx.beginPath();
+      ctx.arc(x, y, 40 + Math.random() * 80, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    // Add structural fracture cracks
-    cctx.strokeStyle = "rgba(40, 45, 55, 0.75)";
-    cctx.lineWidth = 2.5;
-    for (let c = 0; c < 12; c++) {
-      let x = Math.random() * 512;
-      let y = Math.random() * 512;
-      cctx.beginPath();
-      cctx.moveTo(x, y);
-      for (let s = 0; s < 7; s++) {
-        x += (Math.random() - 0.5) * 70;
-        y += (Math.random() - 0.5) * 70;
-        cctx.lineTo(x, y);
-      }
-      cctx.stroke();
-    }
-    this.concreteTexture = new THREE.CanvasTexture(concreteCanvas);
-    this.concreteTexture.wrapS = THREE.RepeatWrapping;
-    this.concreteTexture.wrapT = THREE.RepeatWrapping;
+    // Asphalt Main Road with yellow lane lines
+    ctx.fillStyle = "#333842";
+    ctx.fillRect(160, 0, 160, 1024);
+    ctx.strokeStyle = "#facc15";
+    ctx.lineWidth = 6;
+    ctx.setLineDash([24, 24]);
+    ctx.beginPath();
+    ctx.moveTo(240, 0); ctx.lineTo(240, 1024);
+    ctx.stroke();
+    ctx.setLineDash([]);
 
-    // 2. Cracked Asphalt Road Texture
-    const roadCanvas = document.createElement("canvas");
-    roadCanvas.width = 512;
-    roadCanvas.height = 512;
-    const rctx = roadCanvas.getContext("2d");
-    rctx.fillStyle = "#2d3748";
-    rctx.fillRect(0, 0, 512, 512);
-    for (let i = 0; i < 20000; i++) {
-      const g = Math.floor(30 + Math.random() * 50);
-      rctx.fillStyle = `rgba(${g}, ${g}, ${g}, 0.3)`;
-      rctx.fillRect(Math.random() * 512, Math.random() * 512, 3, 3);
-    }
-    // Yellow hazard road stripe
-    rctx.fillStyle = "#eab308";
-    rctx.fillRect(240, 0, 32, 512);
-    this.roadTexture = new THREE.CanvasTexture(roadCanvas);
-    this.roadTexture.wrapS = THREE.RepeatWrapping;
-    this.roadTexture.wrapT = THREE.RepeatWrapping;
-    this.roadTexture.repeat.set(4, 4);
+    // Earthquake fault rupture fissure (dark chasm)
+    ctx.strokeStyle = "#1e1b18";
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.moveTo(200, 1024);
+    ctx.bezierCurveTo(450, 700, 520, 400, 800, 0);
+    ctx.stroke();
 
-    // 3. Shattered Brick Masonry Texture
+    // Crushed Concrete Rubble Zone (blended greys, dust, and gravel)
+    for (let i = 0; i < 180; i++) {
+      const cx = 550 + (Math.random() - 0.5) * 450;
+      const cy = 500 + (Math.random() - 0.5) * 450;
+      const r = 20 + Math.random() * 60;
+      const shade = Math.floor(130 + Math.random() * 70);
+      ctx.fillStyle = `rgb(${shade}, ${shade - 5}, ${shade - 10})`;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Texture grain and scattered debris stones
+    for (let i = 0; i < 40000; i++) {
+      const s = Math.floor(80 + Math.random() * 120);
+      ctx.fillStyle = `rgba(${s}, ${s}, ${s}, 0.35)`;
+      ctx.fillRect(Math.random() * 1024, Math.random() * 1024, 2, 2);
+    }
+
+    this.aerialTexture = new THREE.CanvasTexture(aerialCanvas);
+    this.aerialTexture.wrapS = THREE.RepeatWrapping;
+    this.aerialTexture.wrapT = THREE.RepeatWrapping;
+
+    // 2. Concrete Building Wall Texture (Stucco, cracks & weathered paint)
+    const bWallCanvas = document.createElement("canvas");
+    bWallCanvas.width = 512;
+    bWallCanvas.height = 512;
+    const wctx = bWallCanvas.getContext("2d");
+    wctx.fillStyle = "#c2c7ce";
+    wctx.fillRect(0, 0, 512, 512);
+
+    // Weathered blue commercial building paint band
+    wctx.fillStyle = "#3b82f6";
+    wctx.fillRect(0, 80, 512, 60);
+
+    // Broken window openings
+    wctx.fillStyle = "#0f172a";
+    for (let x = 30; x < 480; x += 90) {
+      wctx.fillRect(x, 180, 55, 75);
+      wctx.fillRect(x, 320, 55, 75);
+    }
+
+    // Fracture cracks
+    wctx.strokeStyle = "#1e293b";
+    wctx.lineWidth = 3;
+    wctx.beginPath();
+    wctx.moveTo(120, 0); wctx.lineTo(220, 200); wctx.lineTo(190, 360); wctx.lineTo(320, 512);
+    wctx.stroke();
+
+    this.buildingWallTexture = new THREE.CanvasTexture(bWallCanvas);
+
+    // 3. Red Brick Masonry Texture
     const brickCanvas = document.createElement("canvas");
     brickCanvas.width = 256;
     brickCanvas.height = 256;
-    const bctx = brickCanvas.getContext("2d");
-    bctx.fillStyle = "#8a3d31";
-    bctx.fillRect(0, 0, 256, 256);
-    bctx.strokeStyle = "#cbd5e1";
-    bctx.lineWidth = 3;
+    const bkctx = brickCanvas.getContext("2d");
+    bkctx.fillStyle = "#b91c1c";
+    bkctx.fillRect(0, 0, 256, 256);
+    bkctx.strokeStyle = "#e2e8f0";
+    bkctx.lineWidth = 2.5;
     for (let y = 0; y < 256; y += 32) {
-      bctx.beginPath();
-      bctx.moveTo(0, y);
-      bctx.lineTo(256, y);
-      bctx.stroke();
+      bkctx.beginPath();
+      bkctx.moveTo(0, y); bkctx.lineTo(256, y);
+      bkctx.stroke();
       const offset = (y % 64 === 0) ? 0 : 32;
       for (let x = offset; x < 256; x += 64) {
-        bctx.beginPath();
-        bctx.moveTo(x, y);
-        bctx.lineTo(x, y + 32);
-        bctx.stroke();
+        bkctx.beginPath();
+        bkctx.moveTo(x, y); bkctx.lineTo(x, y + 32);
+        bkctx.stroke();
       }
     }
     this.brickTexture = new THREE.CanvasTexture(brickCanvas);
     this.brickTexture.wrapS = THREE.RepeatWrapping;
     this.brickTexture.wrapT = THREE.RepeatWrapping;
+    this.brickTexture.repeat.set(2, 2);
   }
 
   init() {
     const width = this.container.clientWidth || window.innerWidth;
     const height = this.container.clientHeight || window.innerHeight;
 
-    // Generate procedural PBR textures
-    this.generateTextures();
+    this.generateColorAerialTextures();
 
     // Scene
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xdce4ec); // Natural overcast daylight
-    this.scene.fog = new THREE.FogExp2(0xdce4ec, 0.006);
+    this.scene.background = new THREE.Color(0xbdd0e2); // Realistic daylight atmospheric sky
+    this.scene.fog = new THREE.FogExp2(0xbdd0e2, 0.005);
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 1000);
-    this.camera.position.set(-62, 44, 68);
+    this.camera.position.set(-58, 42, 64);
 
     // Renderer
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
@@ -145,46 +177,45 @@ class DisasterScene3D {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.toneMappingExposure = 1.08;
     this.container.appendChild(this.renderer.domElement);
 
-    // Controls
+    // OrbitControls
     this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.05;
+    this.controls.dampingFactor = 0.06;
     this.controls.maxPolarAngle = Math.PI / 2 - 0.02;
-    this.controls.minDistance = 10;
+    this.controls.minDistance = 3;
     this.controls.maxDistance = 250;
     this.controls.target.set(0, 0, 0);
 
     // Setup Components
-    this.setupLighting();
-    this.createAtmosphericDust();
-    this.createRealisticTerrain();
-    this.createCollapsedMultiStoryComplex();
-    this.createRubbleDebrisFields();
-    this.createTrappedSurvivorsInsideVoids();
+    this.setupRealisticLighting();
+    this.createFullColorDisasterTerrain();
+    this.createRealisticCollapsedComplex();
+    this.createColorRubbleFields();
+    this.createCrushedVehicleAndDebris();
+    this.createRealisticTrappedHumanBodies();
     this.createHazardOverlays();
-    this.createContinuousLiDARPrototype();
-    this.createQuadcopter();
+    this.createQuadcopterDrone();
     this.createGroundRescueTeam();
     this.createAllThreeRoutes();
 
-    // Event Listeners
+    // Window Resize & Mouse Raycaster
     window.addEventListener("resize", () => this.onWindowResize());
     this.renderer.domElement.addEventListener("pointerdown", (e) => this.onPointerDown(e));
 
     this.animate();
   }
 
-  setupLighting() {
-    // Ambient light - realistic outdoor diffuse
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+  setupRealisticLighting() {
+    // Ambient light - bright, daylight overcast fill
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.3);
     this.scene.add(ambientLight);
 
-    // Sun directional light casting real soft shadows
-    const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.6);
-    sunLight.position.set(60, 95, 45);
+    // Strong direct sunlight casting realistic shadows
+    const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.8);
+    sunLight.position.set(55, 90, 45);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
     sunLight.shadow.mapSize.height = 2048;
@@ -195,39 +226,16 @@ class DisasterScene3D {
     sunLight.shadow.camera.right = d;
     sunLight.shadow.camera.top = d;
     sunLight.shadow.camera.bottom = -d;
-    sunLight.shadow.bias = -0.0004;
+    sunLight.shadow.bias = -0.0003;
     this.scene.add(sunLight);
 
-    // Hemisphere sky bounce
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x94a3b8, 0.7);
+    // Sky dome fill light
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x85929e, 0.75);
     this.scene.add(hemiLight);
   }
 
-  // Floating atmospheric dust & disaster particulate
-  createAtmosphericDust() {
-    const count = 1800;
-    const geo = new THREE.BufferGeometry();
-    const pos = new Float32Array(count * 3);
-
-    for (let i = 0; i < count; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 140;
-      pos[i * 3 + 1] = 1.0 + Math.random() * 25;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 140;
-    }
-    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-
-    const mat = new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 0.35,
-      transparent: true,
-      opacity: 0.4
-    });
-
-    this.dustParticles = new THREE.Points(geo, mat);
-    this.scene.add(this.dustParticles);
-  }
-
-  createRealisticTerrain() {
+  // 1. COMPLETE 3D TERRAIN IN FULL COLOR (Orthomosaic Photogrammetry Mesh)
+  createFullColorDisasterTerrain() {
     const size = 160;
     const segments = 120;
     const geometry = new THREE.PlaneGeometry(size, size, segments, segments);
@@ -238,151 +246,123 @@ class DisasterScene3D {
       const x = pos.getX(i);
       const z = pos.getZ(i);
 
-      let y = (Math.sin(x * 0.04) * Math.cos(z * 0.04) * 2.5) +
-              (Math.sin(x * 0.1) * 0.8) +
-              (Math.cos(z * 0.12) * 0.6);
+      // Realistic topographical elevation
+      let y = (Math.sin(x * 0.04) * Math.cos(z * 0.04) * 2.8) +
+              (Math.sin(x * 0.09) * 0.9) +
+              (Math.cos(z * 0.11) * 0.7);
 
-      // Fault rupture trench
+      // Deep fault chasm rupture
       const trenchDist = Math.abs(x * 0.6 + z * 0.8);
-      if (trenchDist < 12) {
-        y -= (12 - trenchDist) * 0.22;
+      if (trenchDist < 14) {
+        y -= (14 - trenchDist) * 0.28;
       }
 
-      // Rubble mound beneath collapsed building
+      // Rubble mound around commercial building collapse
       const distCollapse = Math.hypot(x - 26, z - (-15));
-      if (distCollapse < 22) {
-        y += (22 - distCollapse) * 0.25;
+      if (distCollapse < 24) {
+        y += (24 - distCollapse) * 0.28;
       }
 
-      // Flat service access road (Zone Gamma)
+      // Flat road corridor (Zone Gamma)
       if (x > -45 && x < -25) {
-        y = y * 0.15;
+        y = y * 0.12;
       }
 
       pos.setY(i, y);
     }
     geometry.computeVertexNormals();
 
-    const terrainMat = new THREE.MeshStandardMaterial({
-      map: this.concreteTexture,
-      roughness: 0.9,
-      metalness: 0.05,
-      flatShading: true
+    // Photogrammetry textured material in vibrant color
+    const terrainMaterial = new THREE.MeshStandardMaterial({
+      map: this.aerialTexture,
+      roughness: 0.85,
+      metalness: 0.1,
+      flatShading: false
     });
 
-    const terrainMesh = new THREE.Mesh(geometry, terrainMat);
+    const terrainMesh = new THREE.Mesh(geometry, terrainMaterial);
     terrainMesh.receiveShadow = true;
     this.scene.add(terrainMesh);
-
-    // Cleared road strip
-    const roadGeo = new THREE.PlaneGeometry(20, 150);
-    roadGeo.rotateX(-Math.PI / 2);
-    const roadMat = new THREE.MeshStandardMaterial({ map: this.roadTexture, roughness: 0.85 });
-    const roadMesh = new THREE.Mesh(roadGeo, roadMat);
-    roadMesh.position.set(-35, 0.08, 0);
-    roadMesh.receiveShadow = true;
-    this.scene.add(roadMesh);
   }
 
-  // Collapsed Multi-Story Building with Exposed Hollow Voids
-  createCollapsedMultiStoryComplex() {
+  // 2. Realistic Multi-Story Collapsed Commercial Building
+  createRealisticCollapsedComplex() {
     const group = new THREE.Group();
 
-    const concreteMat = new THREE.MeshStandardMaterial({
-      map: this.concreteTexture,
-      roughness: 0.85
-    });
-    const brickMat = new THREE.MeshStandardMaterial({
-      map: this.brickTexture,
-      roughness: 0.9
-    });
-    const steelMat = new THREE.MeshStandardMaterial({
-      color: 0x334155,
-      roughness: 0.4,
-      metalness: 0.8
-    });
-    const rebarMat = new THREE.MeshStandardMaterial({
-      color: 0x991b1b,
-      metalness: 0.7,
-      roughness: 0.3
-    });
+    const wallMat = new THREE.MeshStandardMaterial({ map: this.buildingWallTexture, roughness: 0.8 });
+    const slabMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.85, flatShading: true });
+    const brickMat = new THREE.MeshStandardMaterial({ map: this.brickTexture, roughness: 0.9 });
+    const rebarMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, metalness: 0.8, roughness: 0.3 });
 
-    // 1. Bottom Foundation Floor (Hollow Basement Cavity - Victim 1 Location)
-    const baseFloor = new THREE.Mesh(new THREE.BoxGeometry(26, 0.9, 20), concreteMat);
-    baseFloor.position.set(26, 0.45, -15);
-    baseFloor.castShadow = true;
-    baseFloor.receiveShadow = true;
-    group.add(baseFloor);
-    this.buildingSlabs.push(baseFloor);
+    // Ground Floor Foundation (Basement Cavity Roof)
+    const f1 = new THREE.Mesh(new THREE.BoxGeometry(26, 0.9, 20), slabMat);
+    f1.position.set(26, 0.45, -15);
+    f1.castShadow = true; f1.receiveShadow = true;
+    group.add(f1);
 
-    // 2. Buckled Intermediate Slab (Creates Surviving Triangle Void)
-    const slab2 = new THREE.Mesh(new THREE.BoxGeometry(24, 0.7, 18), concreteMat);
-    slab2.position.set(28, 4.4, -14);
-    slab2.rotation.z = -0.34; // 19.5 degree slope
-    slab2.rotation.y = 0.12;
-    slab2.castShadow = true;
-    slab2.receiveShadow = true;
-    group.add(slab2);
-    this.buildingSlabs.push(slab2);
+    // Tilted Second Floor Slab (Triangle of Life void beneath it)
+    const f2 = new THREE.Mesh(new THREE.BoxGeometry(24, 0.7, 18), slabMat);
+    f2.position.set(28, 4.4, -14);
+    f2.rotation.z = -0.34;
+    f2.rotation.y = 0.12;
+    f2.castShadow = true; f2.receiveShadow = true;
+    group.add(f2);
+    this.buildingMeshes.push(f2);
 
-    // 3. Top Pancake Slab (Severely tilted)
-    const slab3 = new THREE.Mesh(new THREE.BoxGeometry(22, 0.7, 16), concreteMat);
-    slab3.position.set(30, 7.5, -13);
-    slab3.rotation.z = -0.52; // 30 degree tilt
-    slab3.rotation.x = 0.22;
-    slab3.castShadow = true;
-    group.add(slab3);
-    this.buildingSlabs.push(slab3);
+    // Pancake Third Floor Slab
+    const f3 = new THREE.Mesh(new THREE.BoxGeometry(22, 0.7, 16), slabMat);
+    f3.position.set(30, 7.5, -13);
+    f3.rotation.z = -0.52;
+    f3.rotation.x = 0.22;
+    f3.castShadow = true;
+    group.add(f3);
+    this.buildingMeshes.push(f3);
 
-    // 4. Shattered Brick Infill Walls
-    const wall1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 5.0, 14), brickMat);
-    wall1.position.set(16, 2.5, -16);
-    wall1.rotation.y = 0.15;
-    wall1.castShadow = true;
-    group.add(wall1);
+    // Surviving Standing Exterior Walls with Windows
+    const standingWall = new THREE.Mesh(new THREE.BoxGeometry(1.2, 9.0, 18), wallMat);
+    standingWall.position.set(13, 4.5, -15);
+    standingWall.castShadow = true;
+    group.add(standingWall);
 
-    const wallBroken = new THREE.Mesh(new THREE.BoxGeometry(10, 3.2, 1.2), brickMat);
-    wallBroken.position.set(24, 1.6, -6);
-    wallBroken.rotation.z = 0.28;
-    group.add(wallBroken);
+    // Collapsed Brick Infill Walls
+    const brokenBrick = new THREE.Mesh(new THREE.BoxGeometry(12, 3.5, 1.4), brickMat);
+    brokenBrick.position.set(24, 1.75, -5);
+    brokenBrick.rotation.z = 0.32;
+    group.add(brokenBrick);
 
-    // 5. Sheared Concrete Support Pillars & Exposed Steel Rebar
+    // Buckled Support Pillars
     for (let i = 0; i < 7; i++) {
       const h = 2.8 + Math.random() * 3.5;
-      const pillar = new THREE.Mesh(new THREE.BoxGeometry(1.1, h, 1.1), concreteMat);
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(1.2, h, 1.2), slabMat);
       pillar.position.set(17 + (i % 3) * 9, h / 2, -22 + Math.floor(i / 3) * 9);
-      if (i === 1 || i === 4) {
-        pillar.rotation.z = 0.38; // Buckled structural pillar
-      }
+      if (i === 1 || i === 4) pillar.rotation.z = 0.38;
       pillar.castShadow = true;
       group.add(pillar);
     }
 
-    // Protruding twisted steel rebars
-    for (let r = 0; r < 18; r++) {
-      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 4.2, 6), rebarMat);
-      rod.position.set(19 + Math.random() * 18, 3.2 + Math.random() * 4, -22 + Math.random() * 16);
-      rod.rotation.set(Math.random() * 1.2, Math.random() * 1.2, Math.random() * 1.2);
+    // Exposed Twisted Steel Rebar protruding from fractured slabs
+    for (let r = 0; r < 20; r++) {
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 4.5, 6), rebarMat);
+      rod.position.set(18 + Math.random() * 20, 3.2 + Math.random() * 4.5, -22 + Math.random() * 18);
+      rod.rotation.set(Math.random() * 1.4, Math.random() * 1.4, Math.random() * 1.4);
       group.add(rod);
     }
 
-    // 6. Secondary Collapsed Commercial Structure (Victim 2 storefront)
-    const storefront = new THREE.Mesh(new THREE.BoxGeometry(16, 0.8, 8), concreteMat);
-    storefront.position.set(22, 1.2, 18);
-    storefront.rotation.z = 0.24;
-    group.add(storefront);
-    this.buildingSlabs.push(storefront);
+    // Secondary Collapsed Storefront Structure (Survivor 2)
+    const storefrontSlab = new THREE.Mesh(new THREE.BoxGeometry(16, 0.8, 9), slabMat);
+    storefrontSlab.position.set(22, 1.4, 18);
+    storefrontSlab.rotation.z = 0.28;
+    group.add(storefrontSlab);
 
     this.scene.add(group);
   }
 
-  createRubbleDebrisFields() {
+  // 3. Full-Color Rubble Boulders & Concrete Blocks
+  createColorRubbleFields() {
     const rubbleGroup = new THREE.Group();
-    const rubbleMat = new THREE.MeshStandardMaterial({
-      map: this.concreteTexture,
-      roughness: 0.95,
-      flatShading: true
-    });
+
+    const concreteMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.9, flatShading: true });
+    const brickChunkMat = new THREE.MeshStandardMaterial({ map: this.brickTexture, roughness: 0.85 });
 
     const rubbleGeos = [
       new THREE.DodecahedronGeometry(1.4, 0),
@@ -391,22 +371,23 @@ class DisasterScene3D {
     ];
 
     const clusters = [
-      { cx: 28, cz: -14, count: 70, spread: 18 },
-      { cx: 22, cz: 18, count: 32, spread: 11 },
-      { cx: -14, cz: -10, count: 28, spread: 9 },
-      { cx: 38, cz: -28, count: 40, spread: 13 },
-      { cx: 12, cz: -35, count: 25, spread: 8 }
+      { cx: 28, cz: -14, count: 75, spread: 18 },
+      { cx: 22, cz: 18, count: 35, spread: 11 },
+      { cx: -14, cz: -10, count: 30, spread: 9 },
+      { cx: 38, cz: -28, count: 42, spread: 13 },
+      { cx: -32, cz: 24, count: 24, spread: 8 }
     ];
 
     clusters.forEach(c => {
       for (let i = 0; i < c.count; i++) {
         const geo = rubbleGeos[i % rubbleGeos.length];
-        const mesh = new THREE.Mesh(geo, rubbleMat);
+        const mat = (i % 3 === 0) ? brickChunkMat : concreteMat;
+        const mesh = new THREE.Mesh(geo, mat);
         const angle = Math.random() * Math.PI * 2;
         const rad = Math.pow(Math.random(), 0.6) * c.spread;
         const x = c.cx + Math.cos(angle) * rad;
         const z = c.cz + Math.sin(angle) * rad;
-        const scale = 0.5 + Math.random() * 1.4;
+        const scale = 0.5 + Math.random() * 1.5;
 
         mesh.position.set(x, scale * 0.45, z);
         mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
@@ -420,53 +401,110 @@ class DisasterScene3D {
     this.scene.add(rubbleGroup);
   }
 
-  // REALISTIC 3D HUMAN MODELS TRAPPED INSIDE THE VOIDS
-  createTrappedSurvivorsInsideVoids() {
+  // Crushed vehicle in parking ramp (Survivor 5)
+  createCrushedVehicleAndDebris() {
+    const group = new THREE.Group();
+
+    // Red car body crushed under a fallen beam
+    const carMat = new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.7, roughness: 0.3 });
+    const carBody = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.1, 2.0), carMat);
+    carBody.position.set(12, 0.6, -35);
+    carBody.rotation.z = 0.15;
+    carBody.castShadow = true;
+    group.add(carBody);
+
+    // Concrete slab crushing the roof
+    const slabCrush = new THREE.Mesh(
+      new THREE.BoxGeometry(6.0, 0.7, 3.5),
+      new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.9 })
+    );
+    slabCrush.position.set(12.5, 1.5, -35);
+    slabCrush.rotation.z = -0.18;
+    slabCrush.castShadow = true;
+    group.add(slabCrush);
+
+    this.scene.add(group);
+  }
+
+  // 4. REALISTIC HUMAN BODIES STUCK IN THE RUBBLE (Visible from Camera & Void Inspect)
+  createRealisticTrappedHumanBodies() {
     const victims = window.RESCUE_CONFIG.victims;
 
     victims.forEach((v) => {
-      const group = new THREE.Group();
-
-      // Create Detailed 3D Human Figure in Survivor Posture (Curled / Resting in cavity)
       const humanGroup = new THREE.Group();
 
-      const skinMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.6 });
-      const clothesMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.7 });
+      // Realistic skin & clothing materials
+      const skinMat = new THREE.MeshStandardMaterial({ color: 0xe0a96d, roughness: 0.5 });
+      const hairMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.8 });
+      const shirtMat = new THREE.MeshStandardMaterial({ color: 0x2563eb, roughness: 0.7 }); // Blue emergency shirt
+      const pantsMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 }); // Dark jeans
 
-      // Head
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), skinMat);
-      head.position.set(0, 0.4, 0.4);
+      // 1. Head with Hair
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), skinMat);
+      head.position.set(0, 0.45, 0.35);
       humanGroup.add(head);
 
-      // Torso (slanted in survival fetal posture)
-      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.25, 0.8, 12), clothesMat);
+      const hair = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), hairMat);
+      hair.position.set(0, 0.52, 0.32);
+      hair.scale.set(0.95, 0.7, 0.95);
+      humanGroup.add(hair);
+
+      // 2. Torso (trapped at an angle between rubble)
+      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.24, 0.75, 12), shirtMat);
       torso.position.set(0, 0, 0);
       torso.rotation.x = Math.PI / 3;
       humanGroup.add(torso);
 
-      // Limbs
-      const arm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.6, 8), clothesMat);
-      arm1.position.set(-0.35, 0.1, 0.2);
-      arm1.rotation.z = Math.PI / 4;
-      humanGroup.add(arm1);
+      // 3. Right Arm (REACHING OUTWARD from beneath the slab toward the light!)
+      const armReaching = new THREE.Group();
+      const upperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.45, 8), shirtMat);
+      upperArm.position.y = 0.22;
+      armReaching.add(upperArm);
 
-      const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.6, 8), clothesMat);
-      arm2.position.set(0.35, 0.1, 0.2);
-      arm2.rotation.z = -Math.PI / 4;
-      humanGroup.add(arm2);
+      const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.45, 8), skinMat);
+      forearm.position.set(0, 0.55, 0.15);
+      forearm.rotation.x = Math.PI / 4;
+      armReaching.add(forearm);
 
-      const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.8, 8), clothesMat);
-      leg1.position.set(-0.25, -0.4, -0.2);
+      // Hand reaching upward
+      const hand = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.14, 0.05), skinMat);
+      hand.position.set(0, 0.8, 0.35);
+      armReaching.add(hand);
+
+      armReaching.position.set(0.32, 0.15, 0.1);
+      armReaching.rotation.z = -Math.PI / 3;
+      humanGroup.add(armReaching);
+
+      // 4. Left Arm (protecting head/curled)
+      const armCurled = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.5, 8), shirtMat);
+      armCurled.position.set(-0.3, 0.2, 0.25);
+      armCurled.rotation.z = Math.PI / 3;
+      armCurled.rotation.x = Math.PI / 4;
+      humanGroup.add(armCurled);
+
+      // 5. Legs (pinned under concrete block)
+      const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.75, 8), pantsMat);
+      leg1.position.set(-0.2, -0.38, -0.2);
       leg1.rotation.x = -Math.PI / 4;
       humanGroup.add(leg1);
 
-      const leg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.8, 8), clothesMat);
-      leg2.position.set(0.25, -0.4, -0.2);
+      const leg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.09, 0.75, 8), pantsMat);
+      leg2.position.set(0.2, -0.38, -0.2);
       leg2.rotation.x = -Math.PI / 4;
       humanGroup.add(leg2);
 
-      // Glowing Vital Signs / UWB Respiration Halo around the person
-      const vitalRingGeo = new THREE.RingGeometry(0.7, 0.9, 24);
+      // Heavy Concrete Slab visibly pinning their lower legs!
+      const pinningSlab = new THREE.Mesh(
+        new THREE.BoxGeometry(2.4, 0.45, 1.8),
+        new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.9 })
+      );
+      pinningSlab.position.set(0, -0.15, -0.4);
+      pinningSlab.rotation.z = 0.22;
+      pinningSlab.castShadow = true;
+      humanGroup.add(pinningSlab);
+
+      // Vital Aura Halo around the trapped human
+      const vitalRingGeo = new THREE.RingGeometry(0.75, 0.95, 24);
       vitalRingGeo.rotateX(-Math.PI / 2);
       const vitalRingMat = new THREE.MeshBasicMaterial({
         color: new THREE.Color(v.badgeColor),
@@ -475,77 +513,58 @@ class DisasterScene3D {
         opacity: 0.85
       });
       const vitalRing = new THREE.Mesh(vitalRingGeo, vitalRingMat);
-      vitalRing.position.y = -0.1;
+      vitalRing.position.y = 0.05;
       humanGroup.add(vitalRing);
 
-      // Position human inside cavity at exact underground depth
-      humanGroup.position.set(v.coords.x, v.coords.y, v.coords.z);
+      // Place the 3D human body at their exact trapped coordinates
+      humanGroup.position.set(v.coords.x, v.surfaceCoords.y - 0.2, v.coords.z);
       this.scene.add(humanGroup);
-      this.survivorModels.push({ model: humanGroup, victim: v, vitalRing: vitalRing });
+      this.humanSurvivors.push({ model: humanGroup, torso: torso, armReaching: armReaching, victim: v });
 
-      // Surface Target Marker (Poles and beacons rising from void up to surface)
-      const rodHeight = Math.max(1.0, v.depthMeters + 2.8);
-      const rod = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.06, 0.06, rodHeight, 8),
-        new THREE.MeshBasicMaterial({ color: new THREE.Color(v.badgeColor) })
-      );
-      rod.position.y = (rodHeight / 2) - v.depthMeters;
-      group.add(rod);
+      // Surface Target Marker (Beacon & Pulse Ring on the rubble surface above them)
+      const markerGroup = new THREE.Group();
+      const col = new THREE.Color(v.badgeColor);
 
-      // Expanding Radar Pulse Rings on surface rubble
-      const surfaceRingGeo = new THREE.RingGeometry(1.4, 1.9, 32);
-      surfaceRingGeo.rotateX(-Math.PI / 2);
-      const surfaceRingMat = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(v.badgeColor),
-        transparent: true,
-        opacity: 0.8,
-        side: THREE.DoubleSide
-      });
-      const surfaceRing = new THREE.Mesh(surfaceRingGeo, surfaceRingMat);
-      surfaceRing.position.y = 0.25;
-      group.add(surfaceRing);
+      // Vertical penetration indicator rod
+      const rodGeo = new THREE.CylinderGeometry(0.06, 0.06, v.depthMeters + 2.5, 8);
+      const rod = new THREE.Mesh(rodGeo, new THREE.MeshBasicMaterial({ color: col }));
+      rod.position.y = (v.depthMeters + 2.5) / 2;
+      markerGroup.add(rod);
 
-      // Tactical Floating Diamond Beacon
+      // Surface radar pulse rings
+      const pulseRingGeo = new THREE.RingGeometry(1.3, 1.8, 32).rotateX(-Math.PI / 2);
+      const pulseRingMat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.8, side: THREE.DoubleSide });
+      const pulseRing = new THREE.Mesh(pulseRingGeo, pulseRingMat);
+      pulseRing.position.y = 0.2;
+      markerGroup.add(pulseRing);
+
+      // Tactical Diamond Beacon
       const diamond = new THREE.Mesh(
         new THREE.OctahedronGeometry(0.85, 0),
-        new THREE.MeshStandardMaterial({
-          color: new THREE.Color(v.badgeColor),
-          roughness: 0.2,
-          metalness: 0.8
-        })
+        new THREE.MeshStandardMaterial({ color: col, roughness: 0.2, metalness: 0.8 })
       );
-      diamond.position.y = rodHeight - v.depthMeters + 0.8;
-      group.add(diamond);
+      diamond.position.y = v.depthMeters + 2.5 + 0.8;
+      markerGroup.add(diamond);
 
-      group.position.set(v.surfaceCoords.x, v.surfaceCoords.y, v.surfaceCoords.z);
-      group.userData = { victim: v, diamond: diamond, pulseRing: surfaceRing };
-      this.scene.add(group);
-      this.victimMarkers.push(group);
+      markerGroup.position.set(v.surfaceCoords.x, v.surfaceCoords.y, v.surfaceCoords.z);
+      markerGroup.userData = { victim: v, diamond: diamond, pulseRing: pulseRing };
+      this.scene.add(markerGroup);
+      this.victimMarkers.push(markerGroup);
     });
   }
 
+  // 5. Procedural 3D Hazard Cost Zones
   createHazardOverlays() {
     const hazardData = window.RESCUE_CONFIG.hazardZones;
     hazardData.forEach(haz => {
-      const ringGeo = new THREE.RingGeometry(haz.radius * 0.85, haz.radius, 48);
-      ringGeo.rotateX(-Math.PI / 2);
-      const ringMat = new THREE.MeshBasicMaterial({
-        color: haz.color,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.6
-      });
+      const ringGeo = new THREE.RingGeometry(haz.radius * 0.85, haz.radius, 48).rotateX(-Math.PI / 2);
+      const ringMat = new THREE.MeshBasicMaterial({ color: haz.color, side: THREE.DoubleSide, transparent: true, opacity: 0.6 });
       const ringMesh = new THREE.Mesh(ringGeo, ringMat);
       ringMesh.position.set(haz.coords.x, 0.16, haz.coords.z);
       this.scene.add(ringMesh);
 
       const cylGeo = new THREE.CylinderGeometry(haz.radius, haz.radius, 3.5, 32, 1, true);
-      const cylMat = new THREE.MeshBasicMaterial({
-        color: haz.color,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.08
-      });
+      const cylMat = new THREE.MeshBasicMaterial({ color: haz.color, side: THREE.DoubleSide, transparent: true, opacity: 0.08 });
       const cylMesh = new THREE.Mesh(cylGeo, cylMat);
       cylMesh.position.set(haz.coords.x, 1.75, haz.coords.z);
       this.scene.add(cylMesh);
@@ -553,90 +572,23 @@ class DisasterScene3D {
     });
   }
 
-  // CONTINUOUS REAL-TIME LiDAR MAPPED TERRAIN PROTOTYPE
-  createContinuousLiDARPrototype() {
-    const count = 48000;
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-
-    const cTop = new THREE.Color(0xdc2626);   // Red
-    const cMid = new THREE.Color(0xf59e0b);   // Amber
-    const cLow = new THREE.Color(0x10b981);   // Green
-    const cBase = new THREE.Color(0x0284c7);  // Cyan
-
-    for (let i = 0; i < count; i++) {
-      const x = (Math.random() - 0.5) * 144;
-      const z = (Math.random() - 0.5) * 144;
-      let y = 0.3 + (Math.sin(x * 0.05) * Math.cos(z * 0.05) * 2.2);
-
-      if (Math.hypot(x - 26, z - (-15)) < 22) {
-        y += Math.random() * 8.5;
-      } else {
-        y += Math.random() * 1.6;
-      }
-
-      positions[i * 3] = x;
-      positions[i * 3 + 1] = y + 0.14;
-      positions[i * 3 + 2] = z;
-
-      let c;
-      if (y > 5.0) c = cTop;
-      else if (y > 2.2) c = cMid;
-      else if (y > 0.8) c = cLow;
-      else c = cBase;
-
-      colors[i * 3] = c.r;
-      colors[i * 3 + 1] = c.g;
-      colors[i * 3 + 2] = c.b;
-    }
-
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-
-    const material = new THREE.PointsMaterial({
-      size: 0.52,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.85
-    });
-
-    this.lidarPointCloud = new THREE.Points(geometry, material);
-    this.scene.add(this.lidarPointCloud);
-
-    // Active Sweeping Laser Beam Line
-    const sweepGeo = new THREE.PlaneGeometry(140, 2);
-    sweepGeo.rotateX(-Math.PI / 2);
-    const sweepMat = new THREE.MeshBasicMaterial({
-      color: 0x0284c7,
-      transparent: true,
-      opacity: 0.4,
-      side: THREE.DoubleSide
-    });
-    this.lidarSweepLine = new THREE.Mesh(sweepGeo, sweepMat);
-    this.lidarSweepLine.position.y = 0.35;
-    this.scene.add(this.lidarSweepLine);
-  }
-
-  // Realistic Quadcopter with Searchlight & Laser Scanning Frustum
-  createQuadcopter() {
+  // 6. Realistic Quadcopter Drone Model with 4K Gimbal Camera & Spotlight
+  createQuadcopterDrone() {
     this.drone = new THREE.Group();
     const carbonMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3 });
-    const safetyMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3 });
+    const accentMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3 });
 
-    // Fuselage
+    // Fuselage Body
     const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.42, 1.6), carbonMat);
     this.drone.add(body);
 
-    const hood = new THREE.Mesh(new THREE.ConeGeometry(0.7, 0.5, 4), safetyMat);
+    const hood = new THREE.Mesh(new THREE.ConeGeometry(0.7, 0.5, 4), accentMat);
     hood.rotateY(Math.PI / 4);
     hood.position.y = 0.35;
     this.drone.add(hood);
 
-    // Carbon arms
-    const armGeo = new THREE.CylinderGeometry(0.08, 0.08, 2.4, 8);
-    armGeo.rotateZ(Math.PI / 2);
-
+    // Carbon Fiber Arms
+    const armGeo = new THREE.CylinderGeometry(0.08, 0.08, 2.4, 8).rotateZ(Math.PI / 2);
     const arm1 = new THREE.Mesh(armGeo, carbonMat);
     arm1.rotation.y = Math.PI / 4;
     this.drone.add(arm1);
@@ -645,7 +597,7 @@ class DisasterScene3D {
     arm2.rotation.y = -Math.PI / 4;
     this.drone.add(arm2);
 
-    // Motors and spinning rotors
+    // 4 Rotors with Spinning Blurred Blades
     const propMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, transparent: true, opacity: 0.75 });
     const motorPositions = [
       { x: 1.2 * Math.cos(Math.PI / 4), z: 1.2 * Math.sin(Math.PI / 4) },
@@ -663,25 +615,20 @@ class DisasterScene3D {
       this.rotors.push(propGroup);
     });
 
-    // High-Intensity Downward Searchlight
-    this.droneSpotlight = new THREE.SpotLight(0xffffff, 4.0, 45, Math.PI / 6, 0.4, 1.2);
-    this.droneSpotlight.position.set(0, -0.3, 0);
-    this.droneSpotlight.target.position.set(0, -15, 0);
-    this.drone.add(this.droneSpotlight);
-    this.drone.add(this.droneSpotlight.target);
+    // 4K Optical Camera Gimbal + Downward LiDAR Sensor Turret
+    const gimbal = new THREE.Mesh(
+      new THREE.SphereGeometry(0.35, 16, 12),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2, metalness: 0.8 })
+    );
+    gimbal.position.y = -0.3;
+    this.drone.add(gimbal);
 
-    // Pulsing Laser Scanning Cone
-    const coneGeo = new THREE.ConeGeometry(8.5, 14, 24, 1, true);
-    coneGeo.rotateX(Math.PI);
-    const coneMat = new THREE.MeshBasicMaterial({
-      color: 0x0284c7,
-      transparent: true,
-      opacity: 0.18,
-      side: THREE.DoubleSide
-    });
-    this.lidarBeam = new THREE.Mesh(coneGeo, coneMat);
-    this.lidarBeam.position.y = -7;
-    this.drone.add(this.lidarBeam);
+    // Dynamic Searchlight illuminating the rubble
+    const spot = new THREE.SpotLight(0xffffff, 4.0, 45, Math.PI / 5, 0.4, 1.2);
+    spot.position.set(0, -0.3, 0);
+    spot.target.position.set(0, -15, 0);
+    this.drone.add(spot);
+    this.drone.add(spot.target);
 
     this.drone.position.set(-14, 13.5, -10);
     this.scene.add(this.drone);
@@ -723,7 +670,7 @@ class DisasterScene3D {
     this.scene.add(this.groundTeamMarker);
   }
 
-  // SIMULTANEOUS 3-ROUTE SYSTEM: Render Safest (Green), Moderate (Orange), Hard (Red) Together
+  // 7. SIMULTANEOUS 3-ROUTE SYSTEM (Safest Green, Moderate Orange, Hard Red)
   createAllThreeRoutes(targetVictimId = "VIC-01") {
     if (this.safestRouteMesh) this.scene.remove(this.safestRouteMesh);
     if (this.moderateRouteMesh) this.scene.remove(this.moderateRouteMesh);
@@ -733,7 +680,7 @@ class DisasterScene3D {
     const start = window.RESCUE_CONFIG.groundTeam.currentLocation;
     const end = targetVictim.surfaceCoords;
 
-    // 1. SAFEST ROUTE (Green: Navigates cleared corridor, minimal hazard exposure)
+    // 1. SAFEST ROUTE (Green)
     const safestPoints = [
       new THREE.Vector3(start.x, 0.6, start.z),
       new THREE.Vector3(-38, 0.6, 22),
@@ -752,7 +699,7 @@ class DisasterScene3D {
     this.safestRouteMesh = new THREE.Mesh(safestGeo, safestMat);
     this.scene.add(this.safestRouteMesh);
 
-    // 2. MODERATE ROUTE (Orange: Balances travel time with moderate slope climb)
+    // 2. MODERATE ROUTE (Orange)
     const modPoints = [
       new THREE.Vector3(start.x, 0.6, start.z),
       new THREE.Vector3(-25, 0.9, 28),
@@ -771,7 +718,7 @@ class DisasterScene3D {
     this.moderateRouteMesh = new THREE.Mesh(modGeo, modMat);
     this.scene.add(this.moderateRouteMesh);
 
-    // 3. HARD / HAZARDOUS ROUTE (Red: Cuts straight through unstable pancake collapse)
+    // 3. HARD / HAZARDOUS ROUTE (Red)
     const hardPoints = [
       new THREE.Vector3(start.x, 0.6, start.z),
       new THREE.Vector3(start.x * 0.65 + end.x * 0.35, 2.2, start.z * 0.65 + end.z * 0.35),
@@ -816,47 +763,44 @@ class DisasterScene3D {
     }
   }
 
-  // Cutaway / X-Ray Toggle to reveal inside collapsed buildings
-  toggleXrayMode() {
-    this.xrayMode = !this.xrayMode;
-    this.buildingSlabs.forEach(slab => {
-      slab.material.transparent = this.xrayMode;
-      slab.material.opacity = this.xrayMode ? 0.28 : 1.0;
-    });
-    return this.xrayMode;
-  }
-
+  // Camera views with Close-Up Trapped Survivor focus!
   setCameraView(viewMode) {
     if (viewMode === "drone_pov") {
       const dp = this.drone.position;
-      this.camera.position.set(dp.x, dp.y + 2, dp.z + 4);
-      this.controls.target.set(dp.x, 0, dp.z - 8);
+      this.camera.position.set(dp.x, dp.y + 1.8, dp.z + 3.5);
+      this.controls.target.set(dp.x, 0, dp.z - 10);
     } else if (viewMode === "void_inspect") {
-      // Zoom right into the underground void where Survivor 1 is trapped!
-      const v = window.RESCUE_CONFIG.victims[0];
-      this.camera.position.set(v.coords.x - 4, v.coords.y + 3, v.coords.z + 5);
-      this.controls.target.set(v.coords.x, v.coords.y, v.coords.z);
-      if (!this.xrayMode) this.toggleXrayMode();
+      // Zoom right in front of the trapped 3D human body (Survivor 1)
+      const targetSurvivor = this.humanSurvivors[0];
+      if (targetSurvivor) {
+        const hp = targetSurvivor.model.position;
+        this.camera.position.set(hp.x - 3.5, hp.y + 2.4, hp.z + 3.8);
+        this.controls.target.set(hp.x, hp.y + 0.3, hp.z);
+      }
     } else if (viewMode === "top_down") {
-      this.camera.position.set(0, 120, 0);
+      this.camera.position.set(0, 115, 0);
       this.controls.target.set(0, 0, 0);
     } else {
-      this.camera.position.set(-62, 44, 68);
+      // Default isometric overview showing full colored terrain
+      this.camera.position.set(-58, 42, 64);
       this.controls.target.set(0, 0, 0);
     }
   }
 
   focusVictim(victimId) {
-    const marker = this.victimMarkers.find(m => m.userData.victim.id === victimId);
-    if (!marker) return;
     this.selectedVictimId = victimId;
+    const survivor = this.humanSurvivors.find(s => s.victim.id === victimId);
 
-    const vp = marker.position;
-    this.controls.target.set(vp.x, vp.y, vp.z);
-    this.camera.position.set(vp.x - 16, vp.y + 13, vp.z + 18);
+    if (survivor) {
+      const hp = survivor.model.position;
+      // Animate camera directly to the trapped human!
+      this.controls.target.set(hp.x, hp.y + 0.3, hp.z);
+      this.camera.position.set(hp.x - 4.2, hp.y + 2.8, hp.z + 4.5);
 
-    this.drone.position.set(vp.x, 13.5, vp.z);
-    this.createAllThreeRoutes(victimId);
+      // Drone flies directly overhead to position sensors
+      this.drone.position.set(hp.x, 13.5, hp.z);
+      this.createAllThreeRoutes(victimId);
+    }
   }
 
   onPointerDown(event) {
@@ -900,35 +844,24 @@ class DisasterScene3D {
       rotor.rotation.y += dir * 0.45;
     });
 
-    // Drone gentle hovering motion
+    // Drone flight & gentle organic hover
     if (this.drone) {
       this.drone.position.y = 13.5 + Math.sin(elapsed * 2.2) * 0.25;
       this.drone.rotation.z = Math.sin(elapsed * 1.4) * 0.02;
     }
 
-    // Laser scanning sweep plane
-    if (this.lidarSweepLine) {
-      this.lidarSweepLine.position.z = Math.sin(elapsed * 0.8) * 62;
-    }
-
-    // Gentle swirling atmospheric dust
-    if (this.dustParticles) {
-      this.dustParticles.rotation.y = elapsed * 0.02;
-    }
-
-    // Survivors chest breathing movement and vital sign pulse
-    this.survivorModels.forEach(item => {
+    // Trapped humans: physical chest-wall breathing movement & arm motion
+    this.humanSurvivors.forEach((item) => {
       const bpm = item.victim.vitals.respirationDetected ? item.victim.vitals.breathsPerMin : 12;
       const respFreq = (bpm / 60) * 2 * Math.PI;
-      // Chest breathing expansion
-      const scaleY = 1.0 + Math.sin(elapsed * respFreq) * 0.08;
-      item.model.scale.set(1.0, scaleY, 1.0);
 
-      // Vital halo pulsation
-      if (item.vitalRing) {
-        const vScale = 1.0 + ((elapsed * (bpm / 30)) % 1.0) * 0.6;
-        item.vitalRing.scale.set(vScale, vScale, 1);
-        item.vitalRing.material.opacity = Math.max(0.2, 0.9 - ((vScale - 1.0) / 0.6));
+      // Realistic chest expansion
+      const chestExpansion = 1.0 + Math.sin(elapsed * respFreq) * 0.09;
+      if (item.torso) item.torso.scale.set(1.0, chestExpansion, 1.0);
+
+      // Reaching arm slight movement trying to signal
+      if (item.armReaching) {
+        item.armReaching.rotation.z = -Math.PI / 3 + Math.sin(elapsed * 1.5) * 0.08;
       }
     });
 
