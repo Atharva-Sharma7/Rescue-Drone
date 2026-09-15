@@ -3,6 +3,22 @@ import { useMissionStore } from '../stores/mission-store';
 import { StageEvent } from '../lib/types';
 import * as api from '../lib/api';
 
+const getWsUrl = (baseUrl: string): string => {
+  let url = baseUrl.trim();
+  if (url.startsWith('ws://') || url.startsWith('wss://')) return url;
+  if (url.startsWith('https://')) return url.replace(/^https:\/\//, 'wss://');
+  if (url.startsWith('http://')) return url.replace(/^http:\/\//, 'ws://');
+  if (
+    typeof window !== 'undefined' &&
+    window.location.protocol === 'https:' &&
+    !url.includes('localhost') &&
+    !url.includes('127.0.0.1')
+  ) {
+    return `wss://${url}`;
+  }
+  return `ws://${url}`;
+};
+
 export function useMissionWs() {
   const ws = useRef<WebSocket | null>(null);
   const reconnectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -28,10 +44,8 @@ export function useMissionWs() {
         // Non-fatal — WS will carry state
       }
 
-      const wsUrl = backendUrl.startsWith('http')
-        ? backendUrl.replace(/^http/, 'ws')
-        : `ws://${backendUrl}`;
-      const url = `${wsUrl}/missions/${missionId}/events`;
+      const wsBase = getWsUrl(backendUrl);
+      const url = `${wsBase}/missions/${missionId}/events`;
 
       try {
         ws.current = new WebSocket(url);

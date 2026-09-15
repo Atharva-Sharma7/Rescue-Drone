@@ -56,7 +56,7 @@ const empty = {} as Record<StageId, any>;
 
 export const useMissionStore = create<MissionState>((set, get) => ({
   backendUrl: typeof window !== 'undefined'
-    ? (localStorage.getItem('backendUrl') || 'localhost:8000')
+    ? (localStorage.getItem('backendUrl') || (window.location.protocol === 'https:' ? 'removed-oxygen-walked-tennessee.trycloudflare.com' : 'localhost:8000'))
     : 'localhost:8000',
   missionId: null,
   mission: null,
