@@ -54,10 +54,22 @@ interface MissionState {
 
 const empty = {} as Record<StageId, any>;
 
+const getInitialBackendUrl = (): string => {
+  if (typeof window === 'undefined') return 'debris-scan-backend.onrender.com';
+  const saved = localStorage.getItem('backendUrl');
+  if (
+    !saved ||
+    (window.location.protocol === 'https:' &&
+      (saved.includes('localhost') || saved.includes('loca.lt') || saved.includes('trycloudflare.com')))
+  ) {
+    localStorage.setItem('backendUrl', 'debris-scan-backend.onrender.com');
+    return 'debris-scan-backend.onrender.com';
+  }
+  return saved;
+};
+
 export const useMissionStore = create<MissionState>((set, get) => ({
-  backendUrl: typeof window !== 'undefined'
-    ? (localStorage.getItem('backendUrl') || (window.location.protocol === 'https:' ? 'removed-oxygen-walked-tennessee.trycloudflare.com' : 'localhost:8000'))
-    : 'localhost:8000',
+  backendUrl: getInitialBackendUrl(),
   missionId: null,
   mission: null,
   stageStatuses: { ...empty },

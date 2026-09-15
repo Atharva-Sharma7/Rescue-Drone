@@ -156,7 +156,7 @@ function GlobalHeader() {
           type="text"
           value={backendUrl}
           onChange={(e) => setBackendUrl(e.target.value)}
-          placeholder="localhost:8000"
+          placeholder="debris-scan-backend.onrender.com"
           style={{
             background: 'var(--surface-raised)',
             border: '1px solid var(--surface-border)',
@@ -165,7 +165,7 @@ function GlobalHeader() {
             fontSize: 10,
             fontFamily: 'var(--font-mono)',
             color: 'var(--text-secondary)',
-            width: 160,
+            width: 220,
             outline: 'none',
           }}
         />
