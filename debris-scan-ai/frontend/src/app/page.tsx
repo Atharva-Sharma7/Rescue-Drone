@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMissionStore } from '@/stores/mission-store';
 import { useMissionWs } from '@/hooks/use-mission-ws';
 import { StagePipeline, StageRail } from '@/components/stage-pipeline';
@@ -23,47 +23,38 @@ function GlobalHeader() {
     setError,
   } = useMissionStore();
 
-  useEffect(() => {
+  const [isChecking, setIsChecking] = useState(false);
+
+  const checkBackend = useCallback(async () => {
     if (!backendUrl) {
       setIsConnected(false);
       return;
     }
-
-    let cancelled = false;
-
-    const checkBackend = async () => {
-      try {
-        const result = await api.getHealth(backendUrl);
-
-        if (cancelled) return;
-
-        setHealth(result);
-        setIsConnected(result?.status === 'healthy');
-
-        if (result?.status === 'healthy') {
-          setError(null);
-        } else {
-          setError('Backend responded but is not healthy');
-        }
-      } catch (error: any) {
-        if (cancelled) return;
-
-        setIsConnected(false);
-        setError(error?.message || 'Backend connection failed');
+    try {
+      setIsChecking(true);
+      const result = await api.getHealth(backendUrl);
+      setHealth(result);
+      setIsConnected(result?.status === 'healthy');
+      if (result?.status === 'healthy') {
+        setError(null);
+      } else {
+        setError('Backend responded but is not healthy');
       }
-    };
+    } catch (err: any) {
+      setIsConnected(false);
+      setError(err?.message || 'Backend connection failed');
+    } finally {
+      setIsChecking(false);
+    }
+  }, [backendUrl, setHealth, setIsConnected, setError]);
 
+  useEffect(() => {
     checkBackend();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    backendUrl,
-    setHealth,
-    setIsConnected,
-    setError,
-  ]);
+    // Keep checking every 4s if disconnected (handles Render spin-up), every 15s if connected
+    const intervalMs = isConnected ? 15000 : 4000;
+    const interval = setInterval(checkBackend, intervalMs);
+    return () => clearInterval(interval);
+  }, [checkBackend, isConnected]);
 
   return (
     <header
@@ -168,7 +159,27 @@ function GlobalHeader() {
             width: 220,
             outline: 'none',
           }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') checkBackend();
+          }}
         />
+        <button
+          onClick={checkBackend}
+          disabled={isChecking}
+          style={{
+            background: isConnected ? 'var(--accent-green-dim)' : 'var(--surface-raised)',
+            border: `1px solid ${isConnected ? 'var(--accent-green)' : 'var(--surface-border)'}`,
+            borderRadius: 4,
+            padding: '2px 8px',
+            fontSize: 9,
+            fontFamily: 'var(--font-mono)',
+            color: isConnected ? 'var(--accent-green)' : 'var(--text-primary)',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          {isChecking ? '...' : isConnected ? 'Connected' : 'Connect'}
+        </button>
         {health && (
           <span
             style={{

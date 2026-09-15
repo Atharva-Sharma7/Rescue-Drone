@@ -1,7 +1,6 @@
 const getHttpUrl = (baseUrl: string): string => {
   let url = baseUrl.trim();
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  // Localhost/127.0.0.1 uses plain http://, all remote domains (Render, tunnels, cloud) use https://
   if (url.includes('localhost') || url.includes('127.0.0.1')) {
     return `http://${url}`;
   }
@@ -13,7 +12,6 @@ export async function createMission(backendUrl: string, siteName: string) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Bypass-Tunnel-Reminder': 'true',
     },
     body: JSON.stringify({ site_name: siteName }),
   });
@@ -26,7 +24,6 @@ export async function startMission(backendUrl: string, missionId: string) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Bypass-Tunnel-Reminder': 'true',
     },
   });
   if (!res.ok) throw new Error(`Start mission failed: ${res.status}`);
@@ -34,19 +31,29 @@ export async function startMission(backendUrl: string, missionId: string) {
 }
 
 export async function getMission(backendUrl: string, missionId: string) {
-  const res = await fetch(`${getHttpUrl(backendUrl)}/missions/${missionId}`, {
-    headers: { 'Bypass-Tunnel-Reminder': 'true' },
-  });
+  const res = await fetch(`${getHttpUrl(backendUrl)}/missions/${missionId}`);
   if (!res.ok) throw new Error(`Get mission failed: ${res.status}`);
   return res.json();
 }
 
 export async function getHealth(backendUrl: string) {
-  const res = await fetch(`${getHttpUrl(backendUrl)}/health`, {
-    headers: { 'Bypass-Tunnel-Reminder': 'true' },
-  });
-  if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const res = await fetch(`${getHttpUrl(backendUrl)}/health`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
+    return await res.json();
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error('Backend connection timed out (waking up cloud server...)');
+    }
+    throw err;
+  }
 }
 
 export { getHttpUrl };
