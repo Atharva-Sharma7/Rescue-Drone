@@ -99,7 +99,8 @@ class VictimPrioritizationEngine {
         urgency: Math.round(urgencyScore),
         accessibility: Math.round(accessibilityScore),
         confidence: Math.round(confidenceScore),
-        hazardSafety: Math.round(100 - hazardScore)
+        hazardSafety: Math.round(100 - hazardScore),
+        hazardPenalty: Math.round(hazardScore)
       },
       sensorsActiveCount: sensorsActive,
       explainabilityReasons: this.generateExplainabilityNarrative(victim, urgencyScore, accessibilityScore, confidenceScore, hazardScore)

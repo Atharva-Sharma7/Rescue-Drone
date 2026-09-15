@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+:root {
+  /* Surfaces */
+  --surface-bg: #0a0b0e;
+  --surface-card: #0f1117;
+  --surface-raised: #151820;
+  --surface-overlay: #1a1e28;
+  --surface-border: #1e2330;
+  --surface-border-subtle: #151820;
+
+  /* Accent palette — restrained */
+  --accent-blue: #3b82f6;
+  --accent-blue-dim: #1e3a5f;
+  --accent-amber: #f59e0b;
+  --accent-amber-dim: #3d2e08;
+  --accent-green: #10b981;
+  --accent-green-dim: #0d3325;
+  --accent-red: #ef4444;
+  --accent-red-dim: #3d1414;
+  --accent-cyan: #06b6d4;
+
+  /* Text */
+  --text-primary: #e5e7eb;
+  --text-secondary: #9ca3af;
+  --text-tertiary: #6b7280;
+  --text-mono: #d1d5db;
+
+  /* Fonts */
+  --font-sans: var(--font-sans, system-ui, sans-serif);
+  --font-mono: var(--font-mono, 'Courier New', monospace);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--surface-bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface-border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-blue-dim); }
+
+/* Typography utilities */
+.font-mono { font-family: var(--font-mono); }
+.text-mono { color: var(--text-mono); font-family: var(--font-mono); }
+
+/* Status badge variants */
+.badge-pending  { background: var(--surface-overlay); color: var(--text-tertiary); }
+.badge-active   { background: var(--accent-blue-dim); color: var(--accent-blue); }
+.badge-complete { background: var(--accent-green-dim); color: var(--accent-green); }
+.badge-failed   { background: var(--accent-red-dim); color: var(--accent-red); }
+.badge-sim      { background: var(--accent-amber-dim); color: var(--accent-amber); }
+
+/* Panel surface */
+.panel {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 6px;
+}
+
+/* Ensure no horizontal overflow */
+.no-overflow { overflow-x: hidden; }
+
+/* Aspect ratio helper */
+.aspect-video-responsive {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+/* Video base */
+video {
+  display: block;
+  max-width: 100%;
+}
