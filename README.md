@@ -3,10 +3,9 @@
 
 > **An Edge-Capable Quadcopter Platform for Sub-Surface Victim Localization, 3D Hazard Mapping, and Risk-Aware Multi-Victim Rescue Sequencing**
 
-[![Vercel Deployment Ready](https://img.shields.io/badge/Vercel-Deploy%20Ready-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
-[![Netlify Deployment Ready](https://img.shields.io/badge/Netlify-Deploy%20Ready-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://www.netlify.com)
-[![Hugging Face](https://img.shields.io/badge/🤗%20Hugging%20Face-Pretrained%20Models-FFD21E?style=for-the-badge)](https://huggingface.co)
-[![Groq LPU](https://img.shields.io/badge/Groq-LPU%20Ultra--Fast%20AI-F55036?style=for-the-badge)](https://groq.com)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Atharva-Sharma7/Rescue-Drone)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live%20Production-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://frontend-mu-fawn-39.vercel.app)
+[![Google Colab GPU](https://img.shields.io/badge/Google%20Colab-GPU%20Backend-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white)](https://colab.research.google.com/github/Atharva-Sharma7/Rescue-Drone/blob/main/debris-scan-ai/backend/debris_scan_backend.ipynb)
 
 ---
 
