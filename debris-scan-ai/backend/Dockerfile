@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Install system dependencies for OpenCV and networking
+# Install system libraries required by OpenCV and networking
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
@@ -9,18 +9,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy dependencies first for layer caching
+# Install lightweight CPU-only PyTorch (fast build, low memory footprint for free cloud tiers)
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+
+# Install remaining backend dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download YOLO model at build time so runtime boot is instant
+# Pre-cache YOLO11n nano model (5.4MB) during build
 RUN python -c "from ultralytics import YOLO; YOLO('yolo11n.pt')"
 
-# Copy backend application files
+# Copy application source code
 COPY . .
 
-# Expose port (default 8000 or $PORT)
-ENV PORT=8000
-EXPOSE 8000
+# Cloud platforms like Render pass $PORT dynamically
+ENV PORT=10000
+EXPOSE 10000
 
 CMD ["sh", "-c", "uvicorn server:app --host 0.0.0.0 --port ${PORT}"]
