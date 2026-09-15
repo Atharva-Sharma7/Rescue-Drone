@@ -1,5 +1,15 @@
 const getHttpUrl = (baseUrl: string): string => {
   let url = baseUrl.trim();
+  // If connecting to the default Render backend from Vercel, use the same-origin proxy
+  // to completely eliminate CORS preflights, ISP domain blocks, and SSL handshakes
+  if (
+    typeof window !== 'undefined' &&
+    (url === 'debris-scan-backend.onrender.com' ||
+      url === 'https://debris-scan-backend.onrender.com')
+  ) {
+    return '/api/proxy';
+  }
+
   if (url.startsWith('http://') || url.startsWith('https://')) return url;
   if (url.includes('localhost') || url.includes('127.0.0.1')) {
     return `http://${url}`;
@@ -38,7 +48,7 @@ export async function getMission(backendUrl: string, missionId: string) {
 
 export async function getHealth(backendUrl: string) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
     const res = await fetch(`${getHttpUrl(backendUrl)}/health`, {
@@ -50,7 +60,7 @@ export async function getHealth(backendUrl: string) {
   } catch (err: any) {
     clearTimeout(timeoutId);
     if (err.name === 'AbortError') {
-      throw new Error('Backend connection timed out (waking up cloud server...)');
+      throw new Error('Connecting to cloud backend...');
     }
     throw err;
   }

@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async rewrites() {
+    return [
+      {
+        source: "/api/proxy/:path*",
+        destination: "https://debris-scan-backend.onrender.com/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
