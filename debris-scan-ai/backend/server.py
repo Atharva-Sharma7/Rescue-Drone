@@ -120,13 +120,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS: allow all origins (Colab + ngrok + localhost)
+# CORS: allow all origins (Vercel + Colab + ngrok + localhost)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_origin_regex=r"https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 

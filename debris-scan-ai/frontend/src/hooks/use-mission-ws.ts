@@ -8,15 +8,11 @@ const getWsUrl = (baseUrl: string): string => {
   if (url.startsWith('ws://') || url.startsWith('wss://')) return url;
   if (url.startsWith('https://')) return url.replace(/^https:\/\//, 'wss://');
   if (url.startsWith('http://')) return url.replace(/^http:\/\//, 'ws://');
-  if (
-    typeof window !== 'undefined' &&
-    window.location.protocol === 'https:' &&
-    !url.includes('localhost') &&
-    !url.includes('127.0.0.1')
-  ) {
-    return `wss://${url}`;
+  // Localhost uses ws://, remote cloud uses wss://
+  if (url.includes('localhost') || url.includes('127.0.0.1')) {
+    return `ws://${url}`;
   }
-  return `ws://${url}`;
+  return `wss://${url}`;
 };
 
 export function useMissionWs() {
