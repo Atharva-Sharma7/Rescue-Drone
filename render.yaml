@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: debris-scan-backend
+    env: python
+    rootDir: debris-scan-ai/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PORT
+        value: 10000
